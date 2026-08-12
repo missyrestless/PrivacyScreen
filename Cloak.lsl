@@ -19,6 +19,7 @@
 float   cloakSpeed = 0.1;
 integer DEBUG = FALSE;       // Set to TRUE for debug messages to owner, FALSE to disable
 integer TOUCH = FALSE;       // Set to TRUE to enable touch toggles, FALSE to disable
+integer face  = 0;           // Face with screen texture, all other faces will be transparent
 integer listenerID;          // Not yet used
 integer objListenID;         // Not yet used
 integer listenChannel = 999; // Channel for chat and gestures
@@ -29,7 +30,7 @@ lowerShield() {
     if (DEBUG) llOwnerSay("Lowering shield");
     while(alpha > 0.0) {
         alpha -= 0.1;
-        llSetAlpha(alpha, 0);
+        llSetAlpha(alpha, face);
         llSleep(cloakSpeed);
     }
     llSetAlpha(0.0, ALL_SIDES);
@@ -54,7 +55,7 @@ raiseShield() {
     llSetAlpha(alpha, ALL_SIDES);
     while (alpha < 1.0) {
         alpha += 0.1;
-        llSetAlpha(alpha, 0);
+        llSetAlpha(alpha, face);
         llSleep(cloakSpeed);
     }
     llSetStatus(STATUS_PHANTOM, FALSE);

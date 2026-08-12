@@ -17,5 +17,5 @@ make
   mkdir -p ${DEST}
 
   cp Cloak.lslo ${DEST}/Cloak
-  cp LICENSE ${DEST}
+  cp COPYRIGHT LICENSE VERSION ${DEST}
 }
