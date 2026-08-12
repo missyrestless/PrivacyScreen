@@ -4,7 +4,7 @@
 // Message or Touch by owner of object toggles Face 0 transparency               //
 // Face 5 is transparent and flashes 3 times when Face 0 becomes visible         //
 // Listens on channel 999 for trigger messages to cloak or become invisible      //
-// Shouts to other objects with same owner to trigger toggle command             //
+// Messages other objects in region with same owner to trigger toggle command    //
 // When cloaked the prim phantom status is false, when invisible phantom is true //
 ///////////////////////////////////////////////////////////////////////////////////
 
@@ -23,7 +23,7 @@ integer face  = 0;           // Face with screen texture, all other faces will b
 integer listenerID;          // Not yet used
 integer objListenID;         // Not yet used
 integer listenChannel = 999; // Channel for chat and gestures
-integer objChannel = -99966; // Channel for llShout between screens
+integer objChannel;          // Channel for communication between screens, based on owner
 
 lowerShield() {
     float alpha = 1.0;
@@ -63,6 +63,10 @@ raiseShield() {
 
 default {
     state_entry() {
+        // Compute a large negative channel number based on the object owner
+        // All screens owned by the same owner will use the same channel
+        objChannel = 0x80000000 | (integer) ( "0x" + (string) llGetOwner() );
+        if (DEBUG) llOwnerSay("Computed owner object channel: " + (string)objChannel);
         listenerID = llListen(listenChannel, "", llGetOwner(), "");
         objListenID = llListen(objChannel, "", NULL_KEY, "");
     }
@@ -72,19 +76,19 @@ default {
         if (channel == listenChannel) {
             if (DEBUG) llOwnerSay("Heard in default state on chat/gesture listen channel: " + message);
             if (cmd == "down") {
-                // Shout the message to any other objects listening on this channel
-                if (DEBUG) llOwnerSay("Shouting Down from default state");
-                llShout(objChannel, "Down");
+                // Send the message to other objects in region with same owner listening on this channel
+                if (DEBUG) llOwnerSay("Sending Down from default state");
+                llRegionSay(objChannel, "Down");
                 lowerShield();
                 state cloaked;
             } else if (cmd == "up") {
-                // Shout the message to any other objects listening on this channel
-                if (DEBUG) llOwnerSay("Shouting Up from default state");
-                llShout(objChannel, "Up");
+                // Send the message to other objects in region with same owner listening on this channel
+                if (DEBUG) llOwnerSay("Sending Up from default state");
+                llRegionSay(objChannel, "Up");
                 raiseShield();
             }
         } else if (channel == objChannel) {
-            // Don't shout the message if we are receiving a shouted message
+            // Don't resend the message if we are receiving a message on this channel
             if (DEBUG) llOwnerSay("Heard in default state on inter-object listen channel: " + message);
             if (cmd == "down") {
                 lowerShield();
@@ -98,9 +102,9 @@ default {
     touch_end(integer total_number) {
       if (TOUCH) {
         if (llDetectedKey(0) == llGetOwner()) {
-            // Shout the message to any other objects listening on this channel
-            if (DEBUG) llOwnerSay("Shouting Down from default state touch");
-            llShout(objChannel, "Down");
+            // Send the message to other objects in region with same owner listening on this channel
+            if (DEBUG) llOwnerSay("Sending Down from default state touch");
+            llRegionSay(objChannel, "Down");
             lowerShield();
             state cloaked;
         }
@@ -119,19 +123,19 @@ state cloaked {
         if (channel == listenChannel) {
             if (DEBUG) llOwnerSay("Heard in cloaked state on listen channel: " + message);
             if (cmd == "down") {
-                // Shout the message to any other objects listening on this channel
-                if (DEBUG) llOwnerSay("Shouting Down from cloaked state");
-                llShout(objChannel, "Down");
+                // Send the message to other objects in region with same owner listening on this channel
+                if (DEBUG) llOwnerSay("Sending Down from cloaked state");
+                llRegionSay(objChannel, "Down");
                 lowerShield();
             } else if (cmd == "up") {
-                // Shout the message to any other objects listening on this channel
-                if (DEBUG) llOwnerSay("Shouting Up from cloaked state");
-                llShout(objChannel, "Up");
+                // Send the message to other objects in region with same owner listening on this channel
+                if (DEBUG) llOwnerSay("Sending Up from cloaked state");
+                llRegionSay(objChannel, "Up");
                 raiseShield();
                 state default;
             }
         } else if (channel == objChannel) {
-            // Don't shout the message if we are receiving a shouted message
+            // Don't resend the message if we are receiving a message on this channel
             if (DEBUG) llOwnerSay("Heard in cloaked state on inter-object listen channel: " + message);
             if (cmd == "down") {
                 lowerShield();
@@ -145,9 +149,9 @@ state cloaked {
     touch_end(integer total_number) {
       if (TOUCH) {
         if (llDetectedKey(0) == llGetOwner()) {
-            // Shout the message to any other objects listening on this channel
-            if (DEBUG) llOwnerSay("Shouting Up from cloaked state touch");
-            llShout(objChannel, "Up");
+            // Send the message to other objects in region with same owner listening on this channel
+            if (DEBUG) llOwnerSay("Sending Up from cloaked state touch");
+            llRegionSay(objChannel, "Up");
             raiseShield();
             state default;
         }
