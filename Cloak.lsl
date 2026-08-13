@@ -16,21 +16,39 @@
 // Author: Missy Restless missyrestless@gmail.com //
 ////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////
+//            Modification History                //
+//            --------------------                //
+// 2026-Aug-10 Created                            //
+// 2026-Aug-11 Gesture controls                   //
+// 2026-Aug-12 Multiple textured faces            //
+//                                                //
+////////////////////////////////////////////////////
+
 float   cloakSpeed = 0.1;
 integer DEBUG = FALSE;       // Set to TRUE for debug messages to owner, FALSE to disable
 integer TOUCH = FALSE;       // Set to TRUE to enable touch toggles, FALSE to disable
-integer face  = 0;           // Face with screen texture, all other faces will be transparent
 integer listenerID;          // Not yet used
 integer objListenID;         // Not yet used
 integer listenChannel = 999; // Channel for chat and gestures
 integer objChannel;          // Channel for communication between screens, based on owner
+integer total_faces;         // Number of textured faces
+list    faces = [];          // Faces with screen texture, all other faces will be transparent
+
+setFacesAlpha(float trans) {
+    integer i;
+    for (i = 0; i < total_faces; ++i)
+    {
+        llSetAlpha(trans, llList2Integer(faces, i));
+    }
+}
 
 lowerShield() {
     float alpha = 1.0;
     if (DEBUG) llOwnerSay("Lowering shield");
     while(alpha > 0.0) {
         alpha -= 0.1;
-        llSetAlpha(alpha, face);
+        setFacesAlpha(alpha);
         llSleep(cloakSpeed);
     }
     llSetAlpha(0.0, ALL_SIDES);
@@ -55,7 +73,7 @@ raiseShield() {
     llSetAlpha(alpha, ALL_SIDES);
     while (alpha < 1.0) {
         alpha += 0.1;
-        llSetAlpha(alpha, face);
+        setFacesAlpha(alpha);
         llSleep(cloakSpeed);
     }
     llSetStatus(STATUS_PHANTOM, FALSE);
@@ -63,6 +81,38 @@ raiseShield() {
 
 default {
     state_entry() {
+        string currentTex;
+        string DEFAULT_PLYWOOD     = "89556747-24cb-43ed-920b-47caed15465f";
+        string BLANK               = "5b53359e-59dd-d8a2-04c3-9e65134da47a";
+        string TTRANSPARENT        = "8dcd4a48-2d37-4909-9f78-f7a9eb4ef903";
+        string WHITE_TEXTURE       = "5748decc-f629-461c-9a36-a35a221fe21f";
+
+        integer numOfSides = llGetNumberOfSides();
+        integer i;
+        // Find which faces are textured with non-default textures
+        for (i = 0; i < numOfSides; ++i) {
+            currentTex = llGetTexture(i);
+            if ((currentTex != DEFAULT_PLYWOOD) &&
+                (currentTex != TTRANSPARENT) &&
+                (currentTex != BLANK) &&
+                (currentTex != WHITE_TEXTURE) &&
+                (currentTex != "*Default Transparent Texture") &&
+                (currentTex != NULL_KEY)) {
+                if (DEBUG) llOwnerSay("Adding textured face number: " + (string)i);
+                faces += i;
+            } else {
+                if (DEBUG) {
+                    llOwnerSay("Transparent face number: " + (string)i);
+                    if (currentTex == NULL_KEY) {
+                        llOwnerSay("Current texture: NO PRIVILEGE");
+                    } else {
+                        llOwnerSay("Current texture: " + currentTex);
+                    }
+                }
+            }
+        }
+        total_faces = llGetListLength(faces);
+
         // Compute a large negative channel number based on the object owner
         // All screens owned by the same owner will use the same channel
         objChannel = 0x80000000 | (integer) ( "0x" + (string) llGetOwner() );
@@ -109,6 +159,16 @@ default {
             state cloaked;
         }
       }
+    }
+
+    on_rez(integer num) {
+        llResetScript();
+    }
+
+    changed(integer change) {
+         if (change & (CHANGED_OWNER | CHANGED_INVENTORY)) {
+             llResetScript();
+         }
     }
 }
 
