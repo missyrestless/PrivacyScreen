@@ -23,7 +23,7 @@ VERSION="1.0.2"
 
 # Note some of these scripts don't strictly need to be optimized for memory.
 
-OPTIMIZED=Cloak.lslo
+OPTIMIZED=Shield.lslo
 
 UNOPTIMIZED=
 

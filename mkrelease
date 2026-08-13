@@ -53,7 +53,7 @@ gh release create v${VERSION} ${DRAFT} \
                   --title "${ANNO}" \
                   --target "${BRANCH}" \
                   --notes-file README.md \
-                  Cloak.lslo \
+                  Shield.lslo \
                   ${PRODUCT}-${VERSION}.tar.gz
 
 git fetch --tags origin

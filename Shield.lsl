@@ -2,9 +2,9 @@
 //     Toggle Transparency & Phantom with Touch or Message on Listen Channel     //
 //                                                                               //
 // Message or Touch by owner of object toggles Face 0 transparency               //
-// Listens on channel 0 for trigger messages to cloak or become invisible        //
+// Listens on channel 0 for trigger messages to shield or become invisible       //
 // Messages other objects in region with same owner to trigger toggle command    //
-// When cloaked the prim phantom status is false, when invisible phantom is true //
+// When the shield is up the prim is solid, when invisible the prim is phantom   //
 ///////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
@@ -98,8 +98,8 @@ stateShield() {
     integer z = (integer)currentPos.z;
     string coords = (string)x + "/" + (string)y + "/" + (string)z;
 
-    // Construct the Slurl
-    string slurl = "https://maps.secondlife.com/secondlife/" + regionName + "/" + coords;
+    // Construct the Slurl, escape region name as it may have spaces
+    string slurl = "https://maps.secondlife.com/secondlife/" + llEscapeURL(regionName) + "/" + coords;
 
     string location = " at " + slurl;
     if (shieldStatus == TRUE) {

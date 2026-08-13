@@ -16,6 +16,6 @@ make
   rm -rf ${DEST}
   mkdir -p ${DEST}
 
-  cp Cloak.lslo ${DEST}/Cloak
+  cp Shield.lslo ${DEST}/Shield
   cp COPYRIGHT LICENSE VERSION ${DEST}
 }

@@ -1,6 +1,6 @@
 # Truth and Beauty Privacy Shield
 
-The `Cloak` LSL script is used by the Truth &amp; Beauty Privacy Shields, scripted land shields with easy transparency/phantom on/off. All Truth &amp; Beauty Privacy Shields in the same region with the same owner communicate with each other. Activating or deactivating one shield activates or deactivates them all.
+The `Shield` LSL script is used by the Truth &amp; Beauty Privacy Shields, scripted land shields with easy transparency/phantom on/off. All Truth &amp; Beauty Privacy Shields in the same region with the same owner communicate with each other. Activating or deactivating one shield activates or deactivates them all.
 
 ## Table of Contents
 
@@ -74,12 +74,12 @@ To update a Truth &amp; Beauty Privacy Shield:
 
 - Download the latest release from this repository
 - Unzip the release archive
-- Copy the `Cloak` script and paste it into a Second Life script
-- Replace the `Cloak` script in the Privacy Shield with the downloaded version
+- Copy the `Shield` script and paste it into a Second Life script
+- Replace the `Shield` script in the Privacy Shield with the downloaded version
   - Right click the shield and select `Edit`
   - Click the `Contents` tab in the edit window
-  - Delete the `Cloak` script
-  - Drag and Drop the newly downloaded `Cloak` script into the Contents tab
+  - Delete the `Shield` script
+  - Drag and Drop the newly downloaded `Shield` script into the Contents tab
 - Click the Reset Scripts button
 - Close the Edit window
 
