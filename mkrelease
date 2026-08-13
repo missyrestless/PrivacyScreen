@@ -33,7 +33,7 @@ else
   exit 1
 fi
 
-ANNO="Privacy Screen release, version ${VERSION}"
+ANNO="Privacy Shield release, version ${VERSION}"
 
 if [ -f ${HOME}/.mrprivate ]; then
   source ${HOME}/.mrprivate
@@ -43,7 +43,7 @@ make clean
 make
 [ -x trim_lslo ] && ./trim_lslo
 
-PRODUCT="Privacy_Screen"
+PRODUCT="Privacy_Shield"
 tar cf - *.lslo *.lsl \
          LICENSE \
          COPYRIGHT \

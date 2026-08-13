@@ -1,8 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
-//      Toggle Face 0 Transparency with Touch or Message on Listen Channel       //
+//     Toggle Transparency & Phantom with Touch or Message on Listen Channel     //
 //                                                                               //
 // Message or Touch by owner of object toggles Face 0 transparency               //
-// Face 5 is transparent and flashes 3 times when Face 0 becomes visible         //
 // Listens on channel 0 for trigger messages to cloak or become invisible        //
 // Messages other objects in region with same owner to trigger toggle command    //
 // When cloaked the prim phantom status is false, when invisible phantom is true //
@@ -89,9 +88,20 @@ raiseShield() {
 }
 
 stateShield() {
-    string prefix = "Truth & Beauty Privacy Screen";
+    string prefix = "Truth & Beauty Privacy Shield";
     vector currentPos = llGetPos();
-    string location = " at " + (string)currentPos;
+    string regionName = llGetRegionName();
+
+    // Round coordinates to whole integers
+    integer x = (integer)currentPos.x;
+    integer y = (integer)currentPos.y;
+    integer z = (integer)currentPos.z;
+    string coords = (string)x + "/" + (string)y + "/" + (string)z;
+
+    // Construct the Slurl
+    string slurl = "https://maps.secondlife.com/secondlife/" + regionName + "/" + coords;
+
+    string location = " at " + slurl;
     if (shieldStatus == TRUE) {
         llOwnerSay(prefix + location + " is visible and solid");
     } else {
