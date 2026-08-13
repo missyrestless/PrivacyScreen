@@ -4,32 +4,42 @@ The `Cloak` LSL script is used by the Truth &amp; Beauty Privacy Screens, script
 
 ## Table of Contents
 
-- [Usage](#usage)
-- [Gestures](#gestures)
-- [Dialog Menu](#dialog-menu)
+- [Deploy](#deploy)
+- [Manage with Gestures](#manage-with-gestures)
+- [Manage with Dialog Menu](#manage-with-dialog-menu)
 - [Manual Resizing](#manual-resizing)
 - [Updates](#updates)
 - [Support](#support)
 
-## Usage
+## Deploy
 
 Rez a Truth &amp; Beauty Privacy Screen and position it where you want.
 
 Rez as many screens as you need, they can all be controlled using the gestures described below, a dialog menu, or via local chat commands.
 
-## Gestures
+## Manage with Gestures
 
 Control the transparency and phantom status of Truth &amp; Beauty Privacy Screens using gestures. Two gestures are provided, `Shields Up` and `Shields Down`.
 
-Play the `Shields Up` gesture within 10 meters of any Truth &amp; Beauty Privacy Screen and all rezzed screens in the same region owned by the same owner will activate. The texture(s) will become visible and the screens will become solid preventing view and access.
+Activate the `Shields Up` and `Shields Down` gestures:
 
-Play the `Shields Down` gesture within 10 meters of any Truth &amp; Beauty Privacy Screen and all rezzed screens in the same region owned by the same owner will deactivate. The texture(s) will become transparent and the screens will become phantom allowing view and access.
+- Right click the `Shields Up` gesture in your inventory
+- Select `Activate`
+- Right click the `Shields Down` gesture in your inventory
+- Select `Activate`
 
-Alternately, if the gestures are activated, saying `/up` in local chat will play the `Shields Up` gesture and activate the screens. Saying `/down` in local chat will play the `Shields Down` gesture and deactivate the screens.
+Once the gestures are activated:
 
-If the gestures are not activated, say `/999 Up` in local chat to activate the screens and `/999 Down` to deactivate.
+- Saying `/up` in local chat will play the `Shields Up` gesture and activate the screens
+  - All rezzed screens in the same region owned by the same owner will activate
+  - The texture(s) will become visible and the screens will become solid preventing view and access
+- Saying `/down` in local chat will play the `Shields Down` gesture and deactivate the screens
+  - All rezzed screens in the same region owned by the same owner will deactivate
+  - The texture(s) will become transparent and the screens will become phantom allowing view and access
 
-## Dialog Menu
+If the gestures are not activated, say `Shields Up` in local chat to activate the screens and `Shields Down` to deactivate. If you are far from any screen then shout the command, e.g. `/shout Shields Up` or `/shout Shields Down`.
+
+## Manage with Dialog Menu
 
 The Truth &amp; Beauty Privacy Screens can be managed using a dialog menu. To bring up the menu, long press the screen.
 
