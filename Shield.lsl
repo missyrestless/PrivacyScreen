@@ -25,7 +25,7 @@
 //                                                //
 ////////////////////////////////////////////////////
 
-float   cloakSpeed = 0.1;
+string  VERSION = "1.0.3";
 integer DEBUG = FALSE;       // Set to TRUE for debug messages to owner, FALSE to disable
 integer TOUCH = FALSE;       // Set to TRUE to enable touch toggles, FALSE to disable
 integer listenerID;          // Not yet used
@@ -38,6 +38,7 @@ integer rcv_lower;           // Boolean indicating recieved lower screen message
 integer rcv_raise;           // Boolean indicating recieved raise screen message
 integer rcv_state;           // Boolean indicating recieved state message
 list    faces = [];          // Faces with screen texture, all other faces will be transparent
+float   cloakSpeed = 0.1;
 
 setFacesAlpha(float trans) {
     integer i;
@@ -87,8 +88,7 @@ raiseShield() {
     llSetTimerEvent(5.0);
 }
 
-stateShield() {
-    string prefix = "Truth & Beauty Privacy Shield";
+string getShieldSlurl() {
     vector currentPos = llGetPos();
     string regionName = llGetRegionName();
 
@@ -98,14 +98,19 @@ stateShield() {
     integer z = (integer)currentPos.z;
     string coords = (string)x + "/" + (string)y + "/" + (string)z;
 
-    // Construct the Slurl, escape region name as it may have spaces
-    string slurl = "https://maps.secondlife.com/secondlife/" + llEscapeURL(regionName) + "/" + coords;
+    // Return the constructed Slurl, escape region name as it may have spaces
+    return "https://maps.secondlife.com/secondlife/" + llEscapeURL(regionName) + "/" + coords;
+}
+
+stateShield() {
+    string prefix = "Truth & Beauty Privacy Shield version " + VERSION;
+    string slurl = getShieldSlurl();
 
     string location = " at " + slurl;
     if (shieldStatus == TRUE) {
-        llOwnerSay(prefix + location + " is visible and solid");
+        llOwnerSay(prefix + location + " is VISIBLE and SOLID");
     } else {
-        llOwnerSay(prefix + location + " is transparent and phantom");
+        llOwnerSay(prefix + location + " is TRANSPARENT and PHANTOM");
     }
     llSetTimerEvent(5.0);
 }
@@ -222,6 +227,16 @@ default {
     on_rez(integer num) {
         llResetScript();
         raiseShield();
+        string slurl = getShieldSlurl();
+        llOwnerSay("The Truth & Beauty Privacy Shield located at " + slurl + " is now active.");
+        llOwnerSay("Activate the 'Shields Up', 'Shields Down', and 'Shields State' gestures in your inventory");
+        llOwnerSay("Once activated, saying '/up' in public chat will enable all sheilds you own in this region");
+        llOwnerSay("Saying '/down' will disable the shields and make them phantom");
+        llOwnerSay("Saying '/state' will report their status, version, and locations");
+        llOwnerSay("Privacy Shield updates are free for life and will be available at:");
+        llOwnerSay("    https://github.com/missyrestless/PrivacyShield/releases");
+        llOwnerSay("The latest Truth & Beauty Privacy Shield documentation can be found at:");
+        llOwnerSay("    https://github.com/missyrestless/PrivacyShield#readme");
     }
 
     changed(integer change) {
