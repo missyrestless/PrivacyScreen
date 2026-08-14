@@ -20,15 +20,15 @@ Rez as many shields as you need, they can all be controlled using the gestures d
 
 ## Manage with Gestures
 
-Control the transparency and phantom status of Truth &amp; Beauty Privacy Shields using gestures. Three gestures are provided, `Shields Up`, `Shields Down`, and `Shields State`.
+Control the transparency and phantom status of Truth &amp; Beauty Privacy Shields using gestures. Three gestures are provided, `Shields Up`, `Shields Down`, and `Shields Info`.
 
-Activate the `Shields Up`, `Shields Down`, and `Shields State` gestures:
+Activate the `Shields Up`, `Shields Down`, and `Shields Info` gestures:
 
 - Right click the `Shields Up` gesture in your inventory
 - Select `Activate`
 - Right click the `Shields Down` gesture in your inventory
 - Select `Activate`
-- Right click the `Shields State` gesture in your inventory
+- Right click the `Shields Info` gesture in your inventory
 - Select `Activate`
 
 Once the gestures are activated:
@@ -39,7 +39,7 @@ Once the gestures are activated:
 - Saying `/down` in local chat will play the `Shields Down` gesture and deactivate the shields
   - All rezzed shields in the same region owned by the same owner will deactivate
   - The texture(s) will become transparent and the shields will become phantom allowing view and access
-- Saying `/state` in local chat will play the `Shields State` gesture and display all shields' status
+- Saying `/info` in local chat will play the `Shields Info` gesture and display all shields' status
 
 If the gestures are not activated, say `Shields Up` in local chat to activate the shields and `Shields Down` to deactivate. If you are far from any shield then shout the command, e.g. `/shout Shields Up` or `/shout Shields Down`.
 

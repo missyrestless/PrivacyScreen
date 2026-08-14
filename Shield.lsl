@@ -176,12 +176,12 @@ default {
                 if (DEBUG) llOwnerSay("Sending Shields Up from default state");
                 llRegionSay(objChannel, "Shields Up");
                 raiseShield();
-            } else if (cmd == "shields state") {
+            } else if (cmd == "shields info") {
                 if (rcv_state) return;
                 rcv_state = TRUE;
                 // Send the message to other objects in region with same owner listening on this channel
-                if (DEBUG) llOwnerSay("Sending Shields State from default state");
-                llRegionSay(objChannel, "Shields State");
+                if (DEBUG) llOwnerSay("Sending Shields Info from default state");
+                llRegionSay(objChannel, "Shields Info");
                 stateShield();
             }
         } else if (channel == objChannel) {
@@ -196,7 +196,7 @@ default {
                 if (rcv_raise) return;
                 rcv_raise = TRUE;
                 raiseShield();
-            } else if (cmd == "shields state") {
+            } else if (cmd == "shields info") {
                 if (rcv_state) return;
                 rcv_state = TRUE;
                 stateShield();
@@ -229,10 +229,10 @@ default {
         raiseShield();
         string slurl = getShieldSlurl();
         llOwnerSay("The Truth & Beauty Privacy Shield located at " + slurl + " is now active.");
-        llOwnerSay("Activate the 'Shields Up', 'Shields Down', and 'Shields State' gestures in your inventory");
+        llOwnerSay("Activate the 'Shields Up', 'Shields Down', and 'Shields Info' gestures in your inventory");
         llOwnerSay("Once activated, saying '/up' in public chat will enable all sheilds you own in this region");
         llOwnerSay("Saying '/down' will disable the shields and make them phantom");
-        llOwnerSay("Saying '/state' will report their status, version, and locations");
+        llOwnerSay("Saying '/info' will report their status, version, and locations");
         llOwnerSay("Privacy Shield updates are free for life and will be available at:");
         llOwnerSay("    https://github.com/missyrestless/PrivacyShield/releases");
         llOwnerSay("The latest Truth & Beauty Privacy Shield documentation can be found at:");
@@ -271,12 +271,12 @@ state cloaked {
                 llRegionSay(objChannel, "Shields Up");
                 raiseShield();
                 state default;
-            } else if (cmd == "shields state") {
+            } else if (cmd == "shields info") {
                 if (rcv_state) return;
                 rcv_state = TRUE;
                 // Send the message to other objects in region with same owner listening on this channel
-                if (DEBUG) llOwnerSay("Sending Shields State from cloaked state");
-                llRegionSay(objChannel, "Shields State");
+                if (DEBUG) llOwnerSay("Sending Shields Info from cloaked state");
+                llRegionSay(objChannel, "Shields Info");
                 stateShield();
             }
         } else if (channel == objChannel) {
@@ -291,7 +291,7 @@ state cloaked {
                 rcv_raise = TRUE;
                 raiseShield();
                 state default;
-            } else if (cmd == "shields state") {
+            } else if (cmd == "shields info") {
                 if (rcv_state) return;
                 rcv_state = TRUE;
                 stateShield();
