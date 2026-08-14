@@ -45,6 +45,7 @@ integer defaultState = TRUE;
 key     owner = NULL_KEY;
 list    faces = [];          // Faces with screen texture, all other faces will be transparent
 float   cloakSpeed = 0.1;
+vector  prim_size;
 
 // Linkset Data Keys
 //
@@ -187,14 +188,31 @@ list arrange(list l) {
 }
 
 displayMainMenu() {
+    llListenRemove(dialogHandle);
     dialogHandle = llListen(dialogChannel, "", owner, "");
-    list texture_menu = [];
     list main_menu = [];
     string menuMessage;
 
     menuMessage = "\nGet Info, Raise, or Lower the Truth & Beauty Privacy Shields";
-    main_menu = ["Shield UP", "Shield DOWN", "Shield INFO", "EXIT"];
+    main_menu = ["Shield UP", "Shield DOWN", "Shield INFO", "SIZE"];
+    main_menu += ["EXIT"];
     ShowMenu(menuMessage, main_menu);
+}
+
+displaySizeMenu() {
+    llListenRemove(dialogHandle);
+    dialogHandle = llListen(dialogChannel, "", owner, "");
+    list size_menu = [];
+    string menuMessage;
+
+    menuMessage = "\nResize the Truth & Beauty Privacy Shields";
+    menuMessage += "\nCurrent shield size:";
+    menuMessage += "\n\tX: " + (string) ( prim_size.x );
+    menuMessage += "\n\tY: " + (string) ( prim_size.y );
+    menuMessage += "\n\tZ: " + (string) ( prim_size.z );
+    size_menu = ["24x12", "32x16", "40x20", "48x24", "56x28", "64x32"];
+    size_menu += ["BACK", "EXIT"];
+    ShowMenu(menuMessage, size_menu);
 }
 
 // Show the specific menu page
@@ -322,6 +340,8 @@ default {
         objListenID = llListen(objChannel, "", NULL_KEY, "");
         // Compute a negative communications channel based on prim UUID
         dialogChannel = 0x80000000 | (integer) ( "0x" + (string) llGetKey() );
+        // Alternatively, generate a negative non-zero number from the last 7 digits of the prim UUID
+        // dialogChannel = -1 - (integer)("0x" + llGetSubString( (string) llGetKey(), -7, -1) );
     }
 
     listen(integer channel, string name, key id, string message) {
@@ -531,18 +551,14 @@ state menu
     }
 
     listen(integer channel, string name, key id, string message) {
-        // Return code from writes to linkset datastore
-        integer rc;
-
-        // Ignore everybody but the owner
-        if (id != owner) return;
-
         if (message == "Shield UP") {
             raiseShield();
         } else if (message == "Shield DOWN") {
             lowerShield();
         } else if (message == "Shield INFO") {
             stateShield();
+        } else if (message == "SIZE") {
+            state size;
         } else if (message == "EXIT") {
             // Return to the previous state
             if (defaultState) {
@@ -553,6 +569,64 @@ state menu
         }
         // Re-send the dialog to keep the menu open
         displayMainMenu();
+    }
+
+    timer()
+    {
+        // Return to the previous state
+        if (defaultState) {
+            state default;
+        } else {
+            state cloaked;
+        }
+    }
+
+    state_exit()
+    {
+        llSetTimerEvent(0);
+    }
+}
+
+state size
+{
+    state_entry()
+    {
+        prim_size = llGetScale();
+        displaySizeMenu();
+    }
+
+    listen(integer channel, string name, key id, string message) {
+        if (message == "24x12") {
+            prim_size.x = 24.0;
+            prim_size.y = 12.0;
+        } else if (message == "32x16") {
+            prim_size.x = 32.0;
+            prim_size.y = 16.0;
+        } else if (message == "40x20") {
+            prim_size.x = 40.0;
+            prim_size.y = 20.0;
+        } else if (message == "48x24") {
+            prim_size.x = 48.0;
+            prim_size.y = 24.0;
+        } else if (message == "56x28") {
+            prim_size.x = 56.0;
+            prim_size.y = 28.0;
+        } else if (message == "64x32") {
+            prim_size.x = 64.0;
+            prim_size.y = 32.0;
+        } else if (message == "BACK") {
+            state menu;
+        } else if (message == "EXIT") {
+            // Return to the previous state
+            if (defaultState) {
+                state default;
+            } else {
+                state cloaked;
+            }
+        }
+        llSetScale(prim_size);
+        // Re-send the dialog to keep the menu open
+        displaySizeMenu();
     }
 
     timer()
