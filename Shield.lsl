@@ -193,8 +193,15 @@ displayMainMenu() {
     list main_menu = [];
     string menuMessage;
 
-    menuMessage = "\nGet Info, Raise, or Lower the Truth & Beauty Privacy Shields";
+    menuMessage = "\nTruth & Beauty Privacy Shield";
+    menuMessage += "\nVersion " + VERSION;
+    menuMessage += "\nResize, Get Info, Raise, or Lower the shields";
     main_menu = ["Shield UP", "Shield DOWN", "Shield INFO", "SIZE"];
+    if (TOUCH) {
+        main_menu += ["TOUCH OFF"];
+    } else {
+        main_menu += ["TOUCH ON"];
+    }
     main_menu += ["EXIT"];
     ShowMenu(menuMessage, main_menu);
 }
@@ -559,6 +566,10 @@ state menu
             stateShield();
         } else if (message == "SIZE") {
             state size;
+        } else if (message == "TOUCH OFF") {
+            TOUCH = FALSE;
+        } else if (message == "TOUCH ON") {
+            TOUCH = TRUE;
         } else if (message == "EXIT") {
             // Return to the previous state
             if (defaultState) {
