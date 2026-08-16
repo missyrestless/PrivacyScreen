@@ -27,6 +27,7 @@
 
 string  VERSION = "1.0.3";
 integer DEBUG = FALSE;       // Set to TRUE for debug messages to owner, FALSE to disable
+integer FLASH = FALSE;       // Set to TRUE to flash when shield activates, FALSE to disable
 integer TOUCH = FALSE;       // Set to TRUE to enable touch toggles, FALSE to disable
 integer listenerID;          // Not yet used
 integer objListenID;         // Not yet used
@@ -90,15 +91,18 @@ raiseShield() {
     if (DEBUG) llOwnerSay("Raising shield");
     float alpha = 0.0;
     integer count = 0;
-    while (count < 4) {
-        count += 1;
-        if (alpha == 0.0) {
-            alpha = 1.0;
-        } else {
-            alpha = 0.0;
+
+    if (FLASH) {
+        while (count < 4) {
+            count += 1;
+            if (alpha == 0.0) {
+                alpha = 1.0;
+            } else {
+                alpha = 0.0;
+            }
+            llSetAlpha(alpha, ALL_SIDES);
+            llSleep(1.0);
         }
-        llSetAlpha(alpha, ALL_SIDES);
-        llSleep(1.0);
     }
     alpha = 0.0;
     llSetAlpha(alpha, ALL_SIDES);
@@ -197,6 +201,11 @@ displayMainMenu() {
     menuMessage += "\nVersion " + VERSION;
     menuMessage += "\nResize, Get Info, Raise, or Lower the shields";
     main_menu = ["Shield UP", "Shield DOWN", "Shield INFO", "SIZE"];
+    if (FLASH) {
+        main_menu += ["NO FLASH"];
+    } else {
+        main_menu += ["FLASH"];
+    }
     if (TOUCH) {
         main_menu += ["TOUCH OFF"];
     } else {
@@ -418,7 +427,7 @@ default {
             float holdTime = llGetTime();
 
             if (TOUCH) {
-                if (holdTime >= 2.0) {
+                if (holdTime >= 1.0) {
                     // Long press for dialog menu
                     // Handle dialog menu in its own state
                     state menu;
@@ -532,7 +541,7 @@ state cloaked {
             float holdTime = llGetTime();
 
             if (TOUCH) {
-                if (holdTime >= 2.0) {
+                if (holdTime >= 1.0) {
                     // Long press for dialog menu
                     state menu;
                 } else {
@@ -558,14 +567,33 @@ state menu
     }
 
     listen(integer channel, string name, key id, string message) {
+        if (DEBUG) llOwnerSay("Heard in menu state on dialog channel: " + message);
         if (message == "Shield UP") {
+            rcv_raise = TRUE;
+            // Send the message to other objects in region with same owner listening on this channel
+            if (DEBUG) llOwnerSay("Sending Shields Up from menu state");
+            llRegionSay(objChannel, "Shields Up");
             raiseShield();
+            defaultState = TRUE;
         } else if (message == "Shield DOWN") {
+            rcv_lower = TRUE;
+            // Send the message to other objects in region with same owner
+            if (DEBUG) llOwnerSay("Sending Shields Down from menu state");
+            llRegionSay(objChannel, "Shields Down");
             lowerShield();
+            defaultState = FALSE;
         } else if (message == "Shield INFO") {
+            rcv_state = TRUE;
+            // Send the message to other objects in region with same owner listening on this channel
+            if (DEBUG) llOwnerSay("Sending Shields Info from menu state");
+            llRegionSay(objChannel, "Shields Info");
             stateShield();
         } else if (message == "SIZE") {
             state size;
+        } else if (message == "NO FLASH") {
+            FLASH = FALSE;
+        } else if (message == "FLASH") {
+            FLASH = TRUE;
         } else if (message == "TOUCH OFF") {
             TOUCH = FALSE;
         } else if (message == "TOUCH ON") {

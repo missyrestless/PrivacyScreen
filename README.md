@@ -61,6 +61,7 @@ The dialog menu provides a status indicator for all Truth &amp; Beauty Privacy S
 
 - Raise / Lower Shields
 - Enable/Disable Debug Mode
+- Enable/Disable Flashing when shields are activated
 - Enable/Disable Touch to activate/deactivate shields
 - Resize shields to standard formats
 - Select face / Select texture
