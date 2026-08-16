@@ -223,17 +223,11 @@ displayMainMenu() {
         menuMessage += "\nSOLID = Active shields are solid";
     }
     if (TOUCH) {
-        menuMessage += "\nTOUCH OFF = Touch opens dialog menu";
+        menuMessage += "\nTOUCH OFF = Touch opens dialog menu\n";
     } else {
-        menuMessage += "\nTOUCH ON = Touch to raise/lower shields";
+        menuMessage += "\nTOUCH ON = Touch to raise/lower shields\n";
     }
-    if (shieldStatus == TRUE) {
-        menuMessage += "\nShields are UP";
-        main_menu = ["DOWN", "INFO", "SIZE"];
-    } else {
-        menuMessage += "\nShields are DOWN";
-        main_menu = ["UP", "INFO", "SIZE"];
-    }
+    main_menu = ["UP", "DOWN", "INFO", "SIZE"];
     if (ALL) {
         main_menu += ["SINGLE"];
     } else {
