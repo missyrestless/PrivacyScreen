@@ -22,13 +22,16 @@
 // 2026-Aug-11 Gesture controls                   //
 // 2026-Aug-12 Multiple textured faces            //
 // 2026-Aug-13 Add timers to lock state changes   //
+// 2026-Aug-16 Add dialog menu management         //
 //                                                //
 ////////////////////////////////////////////////////
 
-string  VERSION = "1.0.3";
-integer DEBUG = FALSE;       // Set to TRUE for debug messages to owner, FALSE to disable
-integer FLASH = FALSE;       // Set to TRUE to flash when shield activates, FALSE to disable
-integer TOUCH = FALSE;       // Set to TRUE to enable touch toggles, FALSE to disable
+string  VERSION = "1.1.0";
+integer ALL     = TRUE;      // Set to TRUE to effect all shields, FALSE for single shield
+integer DEBUG   = FALSE;     // Set to TRUE for debug messages to owner, FALSE to disable
+integer FLASH   = FALSE;     // Set to TRUE to flash when shield activates, FALSE to disable
+integer SOLID   = TRUE;      // Set to FALSE for always phantom shields, TRUE phantom when invisible
+integer TOUCH   = FALSE;     // Set to TRUE to enable touch toggles, FALSE to disable
 integer listenerID;          // Not yet used
 integer objListenID;         // Not yet used
 integer dialogHandle;        // Dialog Menu listener handle, channel, boolean
@@ -111,7 +114,11 @@ raiseShield() {
         setFacesAlpha(alpha);
         llSleep(cloakSpeed);
     }
-    llSetStatus(STATUS_PHANTOM, FALSE);
+    if (SOLID) {
+        llSetStatus(STATUS_PHANTOM, FALSE);
+    } else {
+        llSetStatus(STATUS_PHANTOM, TRUE);
+    }
     shieldStatus = TRUE;
     llSetTimerEvent(5.0);
 }
@@ -197,14 +204,50 @@ displayMainMenu() {
     list main_menu = [];
     string menuMessage;
 
-    menuMessage = "\nTruth & Beauty Privacy Shield";
-    menuMessage += "\nVersion " + VERSION;
-    menuMessage += "\nResize, Get Info, Raise, or Lower the shields";
-    main_menu = ["Shield UP", "Shield DOWN", "Shield INFO", "SIZE"];
+    menuMessage = "\nTruth & Beauty Privacy Shield " + VERSION;
+    if (ALL) {
+        menuMessage += "\nMenu actions effect all shields in region\n";
+        menuMessage += "\nSINGLE = Menu actions effect only this shield";
+    } else {
+        menuMessage += "\nMenu actions effect only this shield\n";
+        menuMessage += "\nALL = Menu actions effect all shields in region";
+    }
+    if (FLASH) {
+        menuMessage += "\nNO FLASH = Do not flash when activating shield";
+    } else {
+        menuMessage += "\nFLASH = Flash 3 times when activating shield";
+    }
+    if (SOLID) {
+        menuMessage += "\nPHANTOM = Shields always phantom";
+    } else {
+        menuMessage += "\nSOLID = Active shields are solid";
+    }
+    if (TOUCH) {
+        menuMessage += "\nTOUCH OFF = Touch opens dialog menu";
+    } else {
+        menuMessage += "\nTOUCH ON = Touch to raise/lower shields";
+    }
+    if (shieldStatus == TRUE) {
+        menuMessage += "\nShields are UP";
+        main_menu = ["DOWN", "INFO", "SIZE"];
+    } else {
+        menuMessage += "\nShields are DOWN";
+        main_menu = ["UP", "INFO", "SIZE"];
+    }
+    if (ALL) {
+        main_menu += ["SINGLE"];
+    } else {
+        main_menu += ["ALL"];
+    }
     if (FLASH) {
         main_menu += ["NO FLASH"];
     } else {
         main_menu += ["FLASH"];
+    }
+    if (SOLID) {
+        main_menu += ["PHANTOM"];
+    } else {
+        main_menu += ["SOLID"];
     }
     if (TOUCH) {
         main_menu += ["TOUCH OFF"];
@@ -320,6 +363,11 @@ default {
         string WHITE_TEXTURE       = "5748decc-f629-461c-9a36-a35a221fe21f";
 
         defaultState = TRUE;
+        if (llGetAlpha(ALL_SIDES) > 0.0) {
+            shieldStatus = TRUE;
+        } else {
+            shieldStatus = FALSE;
+        }
 
         integer numOfSides = llGetNumberOfSides();
         integer i;
@@ -403,6 +451,18 @@ default {
                 if (rcv_state) return;
                 rcv_state = TRUE;
                 stateShield();
+            } else if (cmd == "flash off") {
+                FLASH = FALSE;
+            } else if (cmd == "flash on") {
+                FLASH = TRUE;
+            } else if (cmd == "phantom") {
+                SOLID = FALSE;
+            } else if (cmd == "solid") {
+                SOLID = TRUE;
+            } else if (cmd == "touch off") {
+                TOUCH = FALSE;
+            } else if (cmd == "touch on") {
+                TOUCH = TRUE;
             }
         }
     }
@@ -517,6 +577,18 @@ state cloaked {
                 if (rcv_state) return;
                 rcv_state = TRUE;
                 stateShield();
+            } else if (cmd == "flash off") {
+                FLASH = FALSE;
+            } else if (cmd == "flash on") {
+                FLASH = TRUE;
+            } else if (cmd == "phantom") {
+                SOLID = FALSE;
+            } else if (cmd == "solid") {
+                SOLID = TRUE;
+            } else if (cmd == "touch off") {
+                TOUCH = FALSE;
+            } else if (cmd == "touch on") {
+                TOUCH = TRUE;
             }
         }
     }
@@ -568,35 +640,81 @@ state menu
 
     listen(integer channel, string name, key id, string message) {
         if (DEBUG) llOwnerSay("Heard in menu state on dialog channel: " + message);
-        if (message == "Shield UP") {
+        if (message == "UP") {
             rcv_raise = TRUE;
-            // Send the message to other objects in region with same owner listening on this channel
-            if (DEBUG) llOwnerSay("Sending Shields Up from menu state");
-            llRegionSay(objChannel, "Shields Up");
+            if (ALL) {
+                // Send the message to other objects in region with same owner listening on this channel
+                if (DEBUG) llOwnerSay("Sending Shields Up from menu state");
+                llRegionSay(objChannel, "Shields Up");
+            }
             raiseShield();
             defaultState = TRUE;
-        } else if (message == "Shield DOWN") {
+        } else if (message == "DOWN") {
             rcv_lower = TRUE;
-            // Send the message to other objects in region with same owner
-            if (DEBUG) llOwnerSay("Sending Shields Down from menu state");
-            llRegionSay(objChannel, "Shields Down");
+            if (ALL) {
+                // Send the message to other objects in region with same owner
+                if (DEBUG) llOwnerSay("Sending Shields Down from menu state");
+                llRegionSay(objChannel, "Shields Down");
+            }
             lowerShield();
             defaultState = FALSE;
-        } else if (message == "Shield INFO") {
+        } else if (message == "INFO") {
             rcv_state = TRUE;
-            // Send the message to other objects in region with same owner listening on this channel
-            if (DEBUG) llOwnerSay("Sending Shields Info from menu state");
-            llRegionSay(objChannel, "Shields Info");
+            if (ALL) {
+                // Send the message to other objects in region with same owner listening on this channel
+                if (DEBUG) llOwnerSay("Sending Shields Info from menu state");
+                llRegionSay(objChannel, "Shields Info");
+            }
             stateShield();
+        } else if (message == "ALL") {
+            ALL = TRUE;
+        } else if (message == "SINGLE") {
+            ALL = FALSE;
         } else if (message == "SIZE") {
             state size;
         } else if (message == "NO FLASH") {
+            if (ALL) {
+                // Send the message to other objects in region with same owner listening on this channel
+                if (DEBUG) llOwnerSay("Sending Flash Off from menu state");
+                llRegionSay(objChannel, "Flash Off");
+            }
             FLASH = FALSE;
         } else if (message == "FLASH") {
+            if (ALL) {
+                // Send the message to other objects in region with same owner listening on this channel
+                if (DEBUG) llOwnerSay("Sending Flash On from menu state");
+                llRegionSay(objChannel, "Flash On");
+            }
             FLASH = TRUE;
+        } else if (message == "SOLID") {
+            if (ALL) {
+                // Send the message to other objects in region with same owner listening on this channel
+                if (DEBUG) llOwnerSay("Sending Solid from menu state");
+                llRegionSay(objChannel, "Solid");
+            }
+            SOLID = TRUE;
+            llSetStatus(STATUS_PHANTOM, FALSE);
+        } else if (message == "PHANTOM") {
+            if (ALL) {
+                // Send the message to other objects in region with same owner listening on this channel
+                if (DEBUG) llOwnerSay("Sending Phantom from menu state");
+                llRegionSay(objChannel, "Phantom");
+            }
+            SOLID = FALSE;
+            llSetStatus(STATUS_PHANTOM, TRUE);
         } else if (message == "TOUCH OFF") {
+            if (ALL) {
+                // Send the message to other objects in region with same owner listening on this channel
+                if (DEBUG) llOwnerSay("Sending Touch Off from menu state");
+                llRegionSay(objChannel, "Touch Off");
+            }
             TOUCH = FALSE;
         } else if (message == "TOUCH ON") {
+            if (ALL) {
+                // Send the message to other objects in region with same owner listening on this channel
+                if (DEBUG) llOwnerSay("Sending Touch On from menu state");
+                llRegionSay(objChannel, "Touch On");
+            }
             TOUCH = TRUE;
         } else if (message == "EXIT") {
             // Return to the previous state
