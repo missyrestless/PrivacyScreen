@@ -65,7 +65,7 @@ The dialog menu provides a status indicator for all Truth &amp; Beauty Privacy S
 - Enable/Disable Touch to activate/deactivate shields
 - Set shields to phantom or solid when active
 - Resize shields to standard formats
-- Select face / Select texture
+- Apply changes to a single shield or all shields in the region owned by the same owner
 
 The Truth &amp; Beauty Privacy Shields store settings in prim K/V storage. No editing notecards, all preferences and settings are automatically saved in the prim K/V store.
 
