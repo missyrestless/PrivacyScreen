@@ -26,10 +26,10 @@
 //                                                //
 ////////////////////////////////////////////////////
 
-string  VERSION = "1.1.0";
+string  VERSION = "1.1.1";
 integer ALL     = TRUE;      // Set to TRUE to effect all shields, FALSE for single shield
-integer DEBUG   = FALSE;     // Set to TRUE for debug messages to owner, FALSE to disable
 integer FLASH   = FALSE;     // Set to TRUE to flash when shield activates, FALSE to disable
+integer GROUP   = FALSE;     // Set to TRUE to allow group members to manage, FALSE for owner only
 integer SOLID   = TRUE;      // Set to FALSE for always phantom shields, TRUE phantom when invisible
 integer TOUCH   = FALSE;     // Set to TRUE to enable touch toggles, FALSE to disable
 integer listenerID;          // Not yet used
@@ -47,26 +47,23 @@ integer rcv_state;           // Boolean indicating recieved state message
 
 integer defaultState = TRUE;
 key     owner = NULL_KEY;
+key     tcher = NULL_KEY;
 list    faces = [];          // Faces with screen texture, all other faces will be transparent
-float   cloakSpeed = 0.1;
+float   cloakSpeed =  0.1;
+float   def_size_x = -1.0;
+float   def_size_y = -1.0;
 vector  prim_size;
 
 // Linkset Data Keys
 //
 // Owner only linkset data key
-string  OWNER_O_LSD_KEY  = "owner_only";
+// string  OWNER_O_LSD_KEY  = "owner_only";
 // Online texture linkset data key
-string  ON_TXT_LSD_KEY   = "online_texture";
+// string  ON_TXT_LSD_KEY   = "online_texture";
 // Offline texture linkset data key
-string  OFF_TXT_LSD_KEY  = "offline_texture";
+// string  OFF_TXT_LSD_KEY  = "offline_texture";
 // Transparency linkset data key
-string  OPAQUE_LSD_KEY   = "is_transparent";
-
-integer isTransparent  = FALSE;
-string  OnlineTexture  = "Mosaic-Online";
-string  OfflineTexture = "Mosaic-Offline";
-
-integer ownerOnly = TRUE;
+// string  OPAQUE_LSD_KEY   = "is_transparent";
 
 setFacesAlpha(float trans) {
     integer i;
@@ -78,7 +75,6 @@ setFacesAlpha(float trans) {
 
 lowerShield() {
     float alpha = 1.0;
-    if (DEBUG) llOwnerSay("Lowering shield");
     while(alpha > 0.0) {
         alpha -= 0.1;
         setFacesAlpha(alpha);
@@ -91,7 +87,6 @@ lowerShield() {
 }
 
 raiseShield() {
-    if (DEBUG) llOwnerSay("Raising shield");
     float alpha = 0.0;
     integer count = 0;
 
@@ -140,16 +135,27 @@ string getShieldSlurl() {
 stateShield() {
     string prefix = "Truth & Beauty Privacy Shield version " + VERSION;
     string slurl = getShieldSlurl();
-
     string location = " at " + slurl;
+    string msg;
+
     if (shieldStatus == TRUE) {
-        llOwnerSay(prefix + location + " is VISIBLE and SOLID");
+        msg = prefix + location + " is VISIBLE and SOLID";
     } else {
-        llOwnerSay(prefix + location + " is TRANSPARENT and PHANTOM");
+        msg = prefix + location + " is TRANSPARENT and PHANTOM";
+    }
+    if (tcher == owner) {
+        llOwnerSay(msg);
+    } else {
+        if (tcher) {
+            llRegionSayTo(tcher, 0, msg);
+        } else {
+            llOwnerSay(msg);
+        }
     }
     llSetTimerEvent(5.0);
 }
 
+// TODO: Add support for selecting and setting faces/textures
 integer num_Textures(string prefix) {
     integer num_textures = 0;
     integer count = llGetInventoryNumber(INVENTORY_TEXTURE);
@@ -200,7 +206,7 @@ list arrange(list l) {
 
 displayMainMenu() {
     llListenRemove(dialogHandle);
-    dialogHandle = llListen(dialogChannel, "", owner, "");
+    dialogHandle = llListen(dialogChannel, "", tcher, "");
     list main_menu = [];
     string menuMessage;
 
@@ -211,6 +217,11 @@ displayMainMenu() {
     } else {
         menuMessage += "\nMenu actions effect only this shield\n";
         menuMessage += "\nALL = Menu actions effect all shields in region";
+    }
+    if (GROUP) {
+        menuMessage += "\nOWNER = Restrict shield management to owner";
+    } else {
+        menuMessage += "\nGROUP = Allow group members and owner to manage";
     }
     if (FLASH) {
         menuMessage += "\nNO FLASH = Do not flash when activating shield";
@@ -233,6 +244,11 @@ displayMainMenu() {
     } else {
         main_menu += ["ALL"];
     }
+    if (GROUP) {
+        main_menu += ["OWNER"];
+    } else {
+        main_menu += ["GROUP"];
+    }
     if (FLASH) {
         main_menu += ["NO FLASH"];
     } else {
@@ -254,7 +270,7 @@ displayMainMenu() {
 
 displaySizeMenu() {
     llListenRemove(dialogHandle);
-    dialogHandle = llListen(dialogChannel, "", owner, "");
+    dialogHandle = llListen(dialogChannel, "", tcher, "");
     list size_menu = [];
     string menuMessage;
 
@@ -264,7 +280,7 @@ displaySizeMenu() {
     menuMessage += "\n\tY: " + (string) ( prim_size.y );
     menuMessage += "\n\tZ: " + (string) ( prim_size.z );
     size_menu = ["24x12", "32x16", "40x20", "48x24", "56x28", "64x32"];
-    size_menu += ["BACK", "EXIT"];
+    size_menu += ["RESTORE", "BACK", "EXIT"];
     ShowMenu(menuMessage, size_menu);
 }
 
@@ -293,11 +309,11 @@ ShowMenu(string msg, list fm) {
         }
 
         // Send the dialog page
-        llDialog(owner, msg + " (Page " + (string)pageNumber + " of " +
+        llDialog(tcher, msg + " (Page " + (string)pageNumber + " of " +
                 (string)totalPages + "):", arrange(displayList), dialogChannel);
     } else {
         // Send the dialog
-        llDialog(owner, msg, arrange(fm), dialogChannel);
+        llDialog(tcher, msg, arrange(fm), dialogChannel);
     }
     llSetTimerEvent(60);   // If no response in time, return to previous state
 }
@@ -332,6 +348,7 @@ string stripTrailingZeros(string str) {
     return str;
 }
 
+// TODO: Add support for storing settings in prim K/V linkset datastore
 // Writes the provided key/value pair to the prim's linkset datastore
 integer linksetDataWrite(key id, string lsdKey, string value, integer link, string cfg) {
     string val = llStringTrim(value, STRING_TRIM);
@@ -356,11 +373,19 @@ default {
         string TTRANSPARENT        = "8dcd4a48-2d37-4909-9f78-f7a9eb4ef903";
         string WHITE_TEXTURE       = "5748decc-f629-461c-9a36-a35a221fe21f";
 
+        owner        = llGetOwner();
+        tcher        = NULL_KEY;
         defaultState = TRUE;
         if (llGetAlpha(ALL_SIDES) > 0.0) {
             shieldStatus = TRUE;
         } else {
             shieldStatus = FALSE;
+        }
+        // Set default prim size if not yet set
+        if ((def_size_x == -1.0) || (def_size_y == -1.0)) {
+            prim_size = llGetScale();
+            def_size_x = prim_size.x;
+            def_size_y = prim_size.y;
         }
 
         integer numOfSides = llGetNumberOfSides();
@@ -374,26 +399,15 @@ default {
                 (currentTex != WHITE_TEXTURE) &&
                 (currentTex != "*Default Transparent Texture") &&
                 (currentTex != NULL_KEY)) {
-                if (DEBUG) llOwnerSay("Adding textured face number: " + (string)i);
                 faces += i;
-            } else {
-                if (DEBUG) {
-                    llOwnerSay("Transparent face number: " + (string)i);
-                    if (currentTex == NULL_KEY) {
-                        llOwnerSay("Current texture: NO PRIVILEGE");
-                    } else {
-                        llOwnerSay("Current texture: " + currentTex);
-                    }
-                }
             }
         }
 
-        total_faces = llGetListLength(faces);
-        owner       = llGetOwner();
+        total_faces  = llGetListLength(faces);
         // Compute a large negative channel number based on the object owner
         // All screens owned by the same owner will use the same channel
         objChannel = 0x80000000 | (integer) ( "0x" + (string) owner );
-        if (DEBUG) llOwnerSay("Computed owner object channel: " + (string)objChannel);
+        // TODO: Filter listen for group members
         listenerID = llListen(listenChannel, "", owner, "");
         objListenID = llListen(objChannel, "", NULL_KEY, "");
         // Compute a negative communications channel based on prim UUID
@@ -405,12 +419,10 @@ default {
     listen(integer channel, string name, key id, string message) {
         string cmd = llToLower(message);
         if (channel == listenChannel) {
-            if (DEBUG) llOwnerSay("Heard in default state on chat/gesture listen channel: " + message);
             if (cmd == "shields down") {
                 if (rcv_lower) return;
                 rcv_lower = TRUE;
                 // Send the message to other objects in region with same owner listening on this channel
-                if (DEBUG) llOwnerSay("Sending Shields Down from default state");
                 llRegionSay(objChannel, "Shields Down");
                 lowerShield();
                 state cloaked;
@@ -418,20 +430,17 @@ default {
                 if (rcv_raise) return;
                 rcv_raise = TRUE;
                 // Send the message to other objects in region with same owner listening on this channel
-                if (DEBUG) llOwnerSay("Sending Shields Up from default state");
                 llRegionSay(objChannel, "Shields Up");
                 raiseShield();
             } else if (cmd == "shields info") {
                 if (rcv_state) return;
                 rcv_state = TRUE;
                 // Send the message to other objects in region with same owner listening on this channel
-                if (DEBUG) llOwnerSay("Sending Shields Info from default state");
                 llRegionSay(objChannel, "Shields Info");
                 stateShield();
             }
         } else if (channel == objChannel) {
             // Don't resend the message if we are receiving a message on this channel
-            if (DEBUG) llOwnerSay("Heard in default state on inter-object listen channel: " + message);
             if (cmd == "shields down") {
                 if (rcv_lower) return;
                 rcv_lower = TRUE;
@@ -445,6 +454,10 @@ default {
                 if (rcv_state) return;
                 rcv_state = TRUE;
                 stateShield();
+            } else if (cmd == "group") {
+                GROUP = TRUE;
+            } else if (cmd == "owner") {
+                GROUP = FALSE;
             } else if (cmd == "flash off") {
                 FLASH = FALSE;
             } else if (cmd == "flash on") {
@@ -470,31 +483,70 @@ default {
     }
 
     touch_start(integer num_detected) {
-        // Ensure only the owner triggers the timer start check
-        if (llDetectedKey(0) == owner) {
-            llResetTime(); // Starts tracking duration
+        tcher = llDetectedKey(0);
+        // Ensure only the owner or group members triggers the timer start check
+        if (GROUP) {
+            if ((llDetectedGroup(0)) || (tcher == owner)) {
+                llResetTime(); // Starts tracking duration
+            } else {
+                tcher = NULL_KEY;
+            }
+        } else {
+            if (tcher == owner) {
+                llResetTime(); // Starts tracking duration
+            } else {
+                tcher = NULL_KEY;
+            }
         }
     }
 
     touch_end(integer num_detected) {
-        if (llDetectedKey(0) == owner) {
-            float holdTime = llGetTime();
-
-            if (TOUCH) {
-                if (holdTime >= 1.0) {
-                    // Long press for dialog menu
-                    // Handle dialog menu in its own state
-                    state menu;
+        float holdTime = llGetTime();
+        if (GROUP) {
+            if ((llDetectedGroup(0)) || (tcher == owner)) {
+                if (TOUCH) {
+                    if (holdTime >= 1.0) {
+                        // Long press for dialog menu
+                        // Handle dialog menu in its own state
+                        state menu;
+                    } else {
+                        if (llGetAlpha(ALL_SIDES) > 0.0) {
+                            llRegionSay(objChannel, "Shields Down");
+                            lowerShield();
+                            state cloaked;
+                        } else {
+                            llRegionSay(objChannel, "Shields Up");
+                            raiseShield();
+                            state default;
+                        }
+                    }
                 } else {
-                    // Send the message to other objects in region with same owner listening on this channel
-                    if (DEBUG) llOwnerSay("Sending Shields Down from default state touch");
-                    llRegionSay(objChannel, "Shields Down");
-                    lowerShield();
-                    state cloaked;
+                    // If shield touch is disabled, display dialog menu on clicks as well
+                    state menu;
                 }
-            } else {
-                // If shield touch is disabled, display dialog menu on clicks as well
-                state menu;
+            }
+        } else {
+            if (tcher == owner) {
+                if (TOUCH) {
+                    if (holdTime >= 1.0) {
+                        // Long press for dialog menu
+                        // Handle dialog menu in its own state
+                        state menu;
+                    } else {
+                        if (llGetAlpha(ALL_SIDES) > 0.0) {
+                            llRegionSay(objChannel, "Shields Down");
+                            lowerShield();
+                            state cloaked;
+                        } else {
+                            llRegionSay(objChannel, "Shields Up");
+                            raiseShield();
+                            state default;
+                        }
+                    }
+                } else {
+                    // If shield touch is disabled, display dialog menu on clicks as well
+                    state menu;
+                }
             }
         }
     }
@@ -512,6 +564,9 @@ default {
         llOwnerSay("    https://github.com/missyrestless/PrivacyShield/releases");
         llOwnerSay("The latest Truth & Beauty Privacy Shield documentation can be found at:");
         llOwnerSay("    https://github.com/missyrestless/PrivacyShield#readme");
+        prim_size = llGetScale();
+        def_size_x = prim_size.x;
+        def_size_y = prim_size.y;
     }
 
     changed(integer change) {
@@ -524,6 +579,8 @@ default {
 state cloaked {
     state_entry() {
         defaultState = FALSE;
+        tcher = NULL_KEY;
+        // TODO: Filter listen for group members
         listenerID = llListen(listenChannel, "", owner, "");
         objListenID = llListen(objChannel, "", NULL_KEY, "");
     }
@@ -531,19 +588,16 @@ state cloaked {
     listen(integer channel, string name, key id, string message) {
         string cmd = llToLower(message);
         if (channel == listenChannel) {
-            if (DEBUG) llOwnerSay("Heard in cloaked state on listen channel: " + message);
             if (cmd == "shields down") {
                 if (rcv_lower) return;
                 rcv_lower = TRUE;
                 // Send the message to other objects in region with same owner listening on this channel
-                if (DEBUG) llOwnerSay("Sending Shields Down from cloaked state");
                 llRegionSay(objChannel, "Shields Down");
                 lowerShield();
             } else if (cmd == "shields up") {
                 if (rcv_raise) return;
                 rcv_raise = TRUE;
                 // Send the message to other objects in region with same owner listening on this channel
-                if (DEBUG) llOwnerSay("Sending Shields Up from cloaked state");
                 llRegionSay(objChannel, "Shields Up");
                 raiseShield();
                 state default;
@@ -551,13 +605,11 @@ state cloaked {
                 if (rcv_state) return;
                 rcv_state = TRUE;
                 // Send the message to other objects in region with same owner listening on this channel
-                if (DEBUG) llOwnerSay("Sending Shields Info from cloaked state");
                 llRegionSay(objChannel, "Shields Info");
                 stateShield();
             }
         } else if (channel == objChannel) {
             // Don't resend the message if we are receiving a message on this channel
-            if (DEBUG) llOwnerSay("Heard in cloaked state on inter-object listen channel: " + message);
             if (cmd == "shields down") {
                 if (rcv_lower) return;
                 rcv_lower = TRUE;
@@ -571,6 +623,10 @@ state cloaked {
                 if (rcv_state) return;
                 rcv_state = TRUE;
                 stateShield();
+            } else if (cmd == "group") {
+                GROUP = TRUE;
+            } else if (cmd == "owner") {
+                GROUP = FALSE;
             } else if (cmd == "flash off") {
                 FLASH = FALSE;
             } else if (cmd == "flash on") {
@@ -596,30 +652,68 @@ state cloaked {
     }
 
     touch_start(integer num_detected) {
-        // Ensure only the owner triggers the timer start check
-        if (llDetectedKey(0) == owner) {
-            llResetTime(); // Starts tracking duration
+        tcher = llDetectedKey(0);
+        // Ensure only the owner or group members triggers the timer start check
+        if (GROUP) {
+            if ((llDetectedGroup(0)) || (tcher == owner)) {
+                llResetTime(); // Starts tracking duration
+            } else {
+                tcher = NULL_KEY;
+            }
+        } else {
+            if (tcher == owner) {
+                llResetTime(); // Starts tracking duration
+            } else {
+                tcher = NULL_KEY;
+            }
         }
     }
 
     touch_end(integer num_detected) {
-        if (llDetectedKey(0) == owner) {
-            float holdTime = llGetTime();
-
-            if (TOUCH) {
-                if (holdTime >= 1.0) {
-                    // Long press for dialog menu
-                    state menu;
+        float holdTime = llGetTime();
+        if (GROUP) {
+            if ((llDetectedGroup(0)) || (tcher == owner)) {
+                if (TOUCH) {
+                    if (holdTime >= 1.0) {
+                        // Long press for dialog menu
+                        state menu;
+                    } else {
+                        if (llGetAlpha(ALL_SIDES) > 0.0) {
+                            llRegionSay(objChannel, "Shields Down");
+                            lowerShield();
+                            state cloaked;
+                        } else {
+                            llRegionSay(objChannel, "Shields Up");
+                            raiseShield();
+                            state default;
+                        }
+                    }
                 } else {
-                    // Send the message to other objects in region with same owner listening on this channel
-                    if (DEBUG) llOwnerSay("Sending Shields Up from cloaked state touch");
-                    llRegionSay(objChannel, "Shields Up");
-                    raiseShield();
-                    state default;
+                    // If shield touch is disabled, click gets dialog menu too
+                    state menu;
                 }
-            } else {
-                // If shield touch is disabled, click gets dialog menu too
-                state menu;
+            }
+        } else {
+            if (tcher == owner) {
+                if (TOUCH) {
+                    if (holdTime >= 1.0) {
+                        // Long press for dialog menu
+                        state menu;
+                    } else {
+                        if (llGetAlpha(ALL_SIDES) > 0.0) {
+                            llRegionSay(objChannel, "Shields Down");
+                            lowerShield();
+                            state cloaked;
+                        } else {
+                            llRegionSay(objChannel, "Shields Up");
+                            raiseShield();
+                            state default;
+                        }
+                    }
+                } else {
+                    // If shield touch is disabled, click gets dialog menu too
+                    state menu;
+                }
             }
         }
     }
@@ -633,12 +727,10 @@ state menu
     }
 
     listen(integer channel, string name, key id, string message) {
-        if (DEBUG) llOwnerSay("Heard in menu state on dialog channel: " + message);
         if (message == "UP") {
             rcv_raise = TRUE;
             if (ALL) {
                 // Send the message to other objects in region with same owner listening on this channel
-                if (DEBUG) llOwnerSay("Sending Shields Up from menu state");
                 llRegionSay(objChannel, "Shields Up");
             }
             raiseShield();
@@ -647,7 +739,6 @@ state menu
             rcv_lower = TRUE;
             if (ALL) {
                 // Send the message to other objects in region with same owner
-                if (DEBUG) llOwnerSay("Sending Shields Down from menu state");
                 llRegionSay(objChannel, "Shields Down");
             }
             lowerShield();
@@ -656,7 +747,6 @@ state menu
             rcv_state = TRUE;
             if (ALL) {
                 // Send the message to other objects in region with same owner listening on this channel
-                if (DEBUG) llOwnerSay("Sending Shields Info from menu state");
                 llRegionSay(objChannel, "Shields Info");
             }
             stateShield();
@@ -666,24 +756,41 @@ state menu
             ALL = FALSE;
         } else if (message == "SIZE") {
             state size;
+        } else if (message == "GROUP") {
+            if (id == owner) {
+                if (ALL) {
+                    // Send the message to other objects in region with same owner listening on this channel
+                    llRegionSay(objChannel, "Group");
+                }
+                GROUP = TRUE;
+            } else {
+                if (id) llRegionSayTo(id, 0, "Only the owner can set the shields to group access");
+            }
+        } else if (message == "OWNER") {
+            if (id == owner) {
+                if (ALL) {
+                    // Send the message to other objects in region with same owner listening on this channel
+                    llRegionSay(objChannel, "Owner");
+                }
+                GROUP = FALSE;
+            } else {
+                if (id) llRegionSayTo(id, 0, "Only the owner can set the shields to owner only");
+            }
         } else if (message == "NO FLASH") {
             if (ALL) {
                 // Send the message to other objects in region with same owner listening on this channel
-                if (DEBUG) llOwnerSay("Sending Flash Off from menu state");
                 llRegionSay(objChannel, "Flash Off");
             }
             FLASH = FALSE;
         } else if (message == "FLASH") {
             if (ALL) {
                 // Send the message to other objects in region with same owner listening on this channel
-                if (DEBUG) llOwnerSay("Sending Flash On from menu state");
                 llRegionSay(objChannel, "Flash On");
             }
             FLASH = TRUE;
         } else if (message == "SOLID") {
             if (ALL) {
                 // Send the message to other objects in region with same owner listening on this channel
-                if (DEBUG) llOwnerSay("Sending Solid from menu state");
                 llRegionSay(objChannel, "Solid");
             }
             SOLID = TRUE;
@@ -691,7 +798,6 @@ state menu
         } else if (message == "PHANTOM") {
             if (ALL) {
                 // Send the message to other objects in region with same owner listening on this channel
-                if (DEBUG) llOwnerSay("Sending Phantom from menu state");
                 llRegionSay(objChannel, "Phantom");
             }
             SOLID = FALSE;
@@ -699,14 +805,12 @@ state menu
         } else if (message == "TOUCH OFF") {
             if (ALL) {
                 // Send the message to other objects in region with same owner listening on this channel
-                if (DEBUG) llOwnerSay("Sending Touch Off from menu state");
                 llRegionSay(objChannel, "Touch Off");
             }
             TOUCH = FALSE;
         } else if (message == "TOUCH ON") {
             if (ALL) {
                 // Send the message to other objects in region with same owner listening on this channel
-                if (DEBUG) llOwnerSay("Sending Touch On from menu state");
                 llRegionSay(objChannel, "Touch On");
             }
             TOUCH = TRUE;
@@ -765,6 +869,9 @@ state size
         } else if (message == "64x32") {
             prim_size.x = 64.0;
             prim_size.y = 32.0;
+        } else if (message == "RESTORE") {
+            prim_size.x = def_size_x;
+            prim_size.y = def_size_y;
         } else if (message == "BACK") {
             state menu;
         } else if (message == "EXIT") {

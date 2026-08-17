@@ -66,6 +66,10 @@ The dialog menu provides a status indicator for all Truth &amp; Beauty Privacy S
 - Set shields to phantom or solid when active
 - Resize shields to standard formats
 - Apply changes to a single shield or all shields in the region owned by the same owner
+- Set each shield to access by owner only or members of the shield's group
+  - If group access is enabled, group members can manage shields via the dialog menu only
+  - Owner can always manage via dialog menu or chat commands and gestures
+  - Group members cannot enable or disable group access, only owner can
 
 The Truth &amp; Beauty Privacy Shields store settings in prim K/V storage. No editing notecards, all preferences and settings are automatically saved in the prim K/V store.
 

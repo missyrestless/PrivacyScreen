@@ -11,6 +11,7 @@
   * Touch on/off
   * Resize menu
   - Select face / Select texture
+* Set shield to access by owner only or group
 * Add Phantom ON/OFF to dialog menu
 * Add ALL/SINGLE to dialog menu to effect all or single shield
 * Pass option menu config to all shields
