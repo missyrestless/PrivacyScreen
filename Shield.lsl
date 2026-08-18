@@ -43,6 +43,8 @@ integer dialogChannel;
 integer pageNumber    = 1;
 integer defaultState  = TRUE;
 integer selected_face = -1;
+integer side_one      = 0;   // Face number for front of shield
+integer side_two      = 5;   // Face number for back of shield
 integer listenChannel = 0;   // Channel for chat and gestures
 integer objChannel;          // Channel for communication between screens, based on owner
 integer shieldStatus;        // TRUE if screen active, FALSE if screen is transparent
@@ -163,18 +165,19 @@ sidedShield() {
     string msg;
 
     if (DOUBLE) {
-        llSetTexture(llGetTexture(0), 5);
+        llSetTexture(llGetTexture(side_one), side_two);
+        if (shieldStatus) {
+            llSetAlpha(1.0, side_two);
+        }
         msg = prefix + location + " is set to DOUBLE SIDED";
     } else {
-        llSetTexture(blank, 5);
+        llSetTexture(blank, side_two);
+        llSetAlpha(0.0, side_two);
         msg = prefix + location + " is set to SINGLE SIDED";
     }
     // Reset the faces list with newly set faces
     set_faces();
     // If shield is up reset the alpha on the textured faces
-    if (shieldStatus) {
-        setFacesAlpha(1.0);
-    }
     if (tcher == owner) {
         llOwnerSay(msg);
     } else {
