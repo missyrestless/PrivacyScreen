@@ -60,7 +60,7 @@ The Truth &amp; Beauty Privacy Shields can be managed using a dialog menu. To br
 The dialog menu provides a status indicator for all Truth &amp; Beauty Privacy Shields in the region and can be used to:
 
 - Raise / Lower Shields
-- Enable/Disable Debug Mode
+- Set to 1-sided shield (default) or 2-sided shield
 - Enable/Disable Flashing when shields are activated
 - Enable/Disable Touch to activate/deactivate shields
 - Set shields to phantom or solid when active

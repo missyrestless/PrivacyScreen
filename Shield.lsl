@@ -30,6 +30,7 @@
 string  VERSION = "1.1.1";
 
 integer ALL     = TRUE;      // Set to TRUE to effect all shields, FALSE for single shield
+integer DOUBLE  = FALSE;     // Set to TRUE for double sided shield, FALSE for single sided
 integer FLASH   = FALSE;     // Set to TRUE to flash when shield activates, FALSE to disable
 integer GROUP   = FALSE;     // Set to TRUE to allow group members to manage, FALSE for owner only
 integer SOLID   = TRUE;      // Set to FALSE for always phantom shields, TRUE phantom when invisible
@@ -49,6 +50,7 @@ integer total_faces;         // Number of textured faces
 integer rcv_lower;           // Boolean indicating recieved lower screen message
 integer rcv_raise;           // Boolean indicating recieved raise screen message
 integer rcv_state;           // Boolean indicating recieved state message
+integer rcv_sided;           // Boolean indicating recieved sided message
 
 key     owner = NULL_KEY;
 key     tcher = NULL_KEY;
@@ -65,6 +67,33 @@ setFacesAlpha(float trans) {
     {
         llSetAlpha(trans, llList2Integer(faces, i));
     }
+}
+
+set_faces() {
+    string currentTex;
+    string DEFAULT_PLYWOOD     = "89556747-24cb-43ed-920b-47caed15465f";
+    string BLANK               = "5b53359e-59dd-d8a2-04c3-9e65134da47a";
+    string TTRANSPARENT        = "8dcd4a48-2d37-4909-9f78-f7a9eb4ef903";
+    string WHITE_TEXTURE       = "5748decc-f629-461c-9a36-a35a221fe21f";
+
+    integer numOfSides = llGetNumberOfSides();
+    integer i;
+    // Find which faces are textured with non-default textures
+    faces = [];
+    texts = [];
+    for (i = 0; i < numOfSides; ++i) {
+        currentTex = llGetTexture(i);
+        if ((currentTex != DEFAULT_PLYWOOD) &&
+            (currentTex != TTRANSPARENT) &&
+            (currentTex != BLANK) &&
+            (currentTex != WHITE_TEXTURE) &&
+            (currentTex != "*Default Transparent Texture") &&
+            (currentTex != NULL_KEY)) {
+            faces += i;
+            texts += [i, currentTex];
+        }
+    }
+    total_faces  = llGetListLength(faces);
 }
 
 lowerShield() {
@@ -126,13 +155,45 @@ string getShieldSlurl() {
     return "https://maps.secondlife.com/secondlife/" + llEscapeURL(regionName) + "/" + coords;
 }
 
+sidedShield() {
+    string prefix = "Truth & Beauty Privacy Shield version " + VERSION;
+    string slurl = getShieldSlurl();
+    string location = " at " + slurl;
+    string blank = "5b53359e-59dd-d8a2-04c3-9e65134da47a";
+    string msg;
+
+    if (DOUBLE) {
+        llSetTexture(llGetTexture(0), 5);
+        msg = prefix + location + " is set to DOUBLE SIDED";
+    } else {
+        llSetTexture(blank, 5);
+        msg = prefix + location + " is set to SINGLE SIDED";
+    }
+    // Reset the faces list with newly set faces
+    set_faces();
+    // If shield is up reset the alpha on the textured faces
+    if (shieldStatus) {
+        setFacesAlpha(1.0);
+    }
+    if (tcher == owner) {
+        llOwnerSay(msg);
+    } else {
+        if (tcher) {
+            llRegionSayTo(tcher, 0, msg);
+        } else {
+            llOwnerSay(msg);
+        }
+    }
+    llSetTimerEvent(5.0);
+}
+
 stateShield() {
     string prefix = "Truth & Beauty Privacy Shield version " + VERSION;
     string slurl = getShieldSlurl();
     string location = " at " + slurl;
     string msg;
 
-    if (shieldStatus == TRUE) {
+    if (shieldStatus) {
         msg = prefix + location + " is VISIBLE and SOLID";
     } else {
         msg = prefix + location + " is TRANSPARENT and PHANTOM";
@@ -183,10 +244,16 @@ displayMainMenu() {
     menuMessage = "\nTruth & Beauty Privacy Shield " + VERSION;
     if (ALL) {
         menuMessage += "\nMenu actions effect ALL SHIELDS IN REGION\n";
-        menuMessage += "\nSINGLE = Menu actions effect only this shield";
+        menuMessage += "\nSOLO = Menu actions effect only this shield";
     } else {
         menuMessage += "\nMenu actions effect ONLY THIS SHIELD\n";
         menuMessage += "\nALL = Menu actions effect all shields in region";
+    }
+    // 1-Sided Shield or 2-Sided
+    if (DOUBLE) {
+        menuMessage += "\nONE SIDE = Sets Single Sided texturing";
+    } else {
+        menuMessage += "\nTWO SIDES = Sets Double Sided texturing";
     }
     menuMessage += "\nSIZE = Open the Shield resize menu";
     menuMessage += "\nTEXTURE = Open the Shield texture menu";
@@ -210,12 +277,18 @@ displayMainMenu() {
     } else {
         menuMessage += "\nTOUCH ON = Touch to raise/lower shields\n";
     }
-    main_menu = ["UP", "DOWN", "INFO", "SIZE", "TEXTURE"];
+    main_menu = ["UP", "DOWN", "INFO"];
     if (ALL) {
-        main_menu += ["SINGLE"];
+        main_menu += ["SOLO"];
     } else {
         main_menu += ["ALL"];
     }
+    if (DOUBLE) {
+        main_menu += ["ONE SIDE"];
+    } else {
+        main_menu += ["TWO SIDES"];
+    }
+    main_menu += ["SIZE", "TEXTURE"];
     if (GROUP) {
         main_menu += ["OWNER"];
     } else {
@@ -358,12 +431,6 @@ ShowMenu(string msg, list fm) {
 
 default {
     state_entry() {
-        string currentTex;
-        string DEFAULT_PLYWOOD     = "89556747-24cb-43ed-920b-47caed15465f";
-        string BLANK               = "5b53359e-59dd-d8a2-04c3-9e65134da47a";
-        string TTRANSPARENT        = "8dcd4a48-2d37-4909-9f78-f7a9eb4ef903";
-        string WHITE_TEXTURE       = "5748decc-f629-461c-9a36-a35a221fe21f";
-
         owner        = llGetOwner();
         tcher        = NULL_KEY;
         defaultState = TRUE;
@@ -378,26 +445,7 @@ default {
             def_size_x = prim_size.x;
             def_size_y = prim_size.y;
         }
-
-        integer numOfSides = llGetNumberOfSides();
-        integer i;
-        // Find which faces are textured with non-default textures
-        faces = [];
-        texts = [];
-        for (i = 0; i < numOfSides; ++i) {
-            currentTex = llGetTexture(i);
-            if ((currentTex != DEFAULT_PLYWOOD) &&
-                (currentTex != TTRANSPARENT) &&
-                (currentTex != BLANK) &&
-                (currentTex != WHITE_TEXTURE) &&
-                (currentTex != "*Default Transparent Texture") &&
-                (currentTex != NULL_KEY)) {
-                faces += i;
-                texts += [i, currentTex];
-            }
-        }
-
-        total_faces  = llGetListLength(faces);
+        set_faces();
         // Compute a large negative channel number based on the object owner
         // All screens owned by the same owner will use the same channel
         objChannel = 0x80000000 | (integer) ( "0x" + (string) owner );
@@ -448,6 +496,16 @@ default {
                 if (rcv_state) return;
                 rcv_state = TRUE;
                 stateShield();
+            } else if (cmd == "shields one") {
+                if (rcv_sided) return;
+                rcv_sided = TRUE;
+                DOUBLE = FALSE;
+                sidedShield();
+            } else if (cmd == "shields two") {
+                if (rcv_sided) return;
+                rcv_sided = TRUE;
+                DOUBLE = TRUE;
+                sidedShield();
             } else if (cmd == "group") {
                 GROUP = TRUE;
             } else if (cmd == "owner") {
@@ -472,6 +530,7 @@ default {
         rcv_lower = FALSE;
         rcv_raise = FALSE;
         rcv_state = FALSE;
+        rcv_sided = FALSE;
         llSetTimerEvent(0.0);
     }
 
@@ -616,6 +675,16 @@ state cloaked {
                 if (rcv_state) return;
                 rcv_state = TRUE;
                 stateShield();
+            } else if (cmd == "shields one") {
+                if (rcv_sided) return;
+                rcv_sided = TRUE;
+                DOUBLE = FALSE;
+                sidedShield();
+            } else if (cmd == "shields two") {
+                if (rcv_sided) return;
+                rcv_sided = TRUE;
+                DOUBLE = TRUE;
+                sidedShield();
             } else if (cmd == "group") {
                 GROUP = TRUE;
             } else if (cmd == "owner") {
@@ -640,6 +709,7 @@ state cloaked {
         rcv_lower = FALSE;
         rcv_raise = FALSE;
         rcv_state = FALSE;
+        rcv_sided = FALSE;
         llSetTimerEvent(0.0);
     }
 
@@ -741,9 +811,25 @@ state menu
                 llRegionSay(objChannel, "Shields Info");
             }
             stateShield();
+        } else if (message == "ONE SIDE") {
+            DOUBLE = FALSE;
+            rcv_sided = TRUE;
+            if (ALL) {
+                // Send the message to other objects in region with same owner listening on this channel
+                llRegionSay(objChannel, "Shields One");
+            }
+            sidedShield();
+        } else if (message == "TWO SIDES") {
+            DOUBLE = TRUE;
+            rcv_sided = TRUE;
+            if (ALL) {
+                // Send the message to other objects in region with same owner listening on this channel
+                llRegionSay(objChannel, "Shields Two");
+            }
+            sidedShield();
         } else if (message == "ALL") {
             ALL = TRUE;
-        } else if (message == "SINGLE") {
+        } else if (message == "SOLO") {
             ALL = FALSE;
         } else if (message == "SIZE") {
             state size;

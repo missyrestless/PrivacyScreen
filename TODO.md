@@ -21,3 +21,4 @@
 * Pass option menu config to all shields
 * Initial setup in default state entry
 * Add support for multiple textures &amp; selection with dialog menu
+* Add single sided and double sided to dialog menu
