@@ -54,23 +54,10 @@ key     owner = NULL_KEY;
 key     tcher = NULL_KEY;
 list    faces = [];          // Faces with screen texture, all other faces will be transparent
 list    texts = [];          // Face & Texture of faces with screen texture, for use as strided list
-list    strid = [];          // Strided list of Faces & Textures
 float   cloakSpeed =  0.1;
 float   def_size_x = -1.0;
 float   def_size_y = -1.0;
-string  texture_prefix = "Shield_"; // Textures in object inventory beginning with Shield_ will be used
 vector  prim_size;
-
-// Linkset Data Keys
-//
-// Owner only linkset data key
-// string  OWNER_O_LSD_KEY  = "owner_only";
-// Online texture linkset data key
-// string  ON_TXT_LSD_KEY   = "online_texture";
-// Offline texture linkset data key
-// string  OFF_TXT_LSD_KEY  = "offline_texture";
-// Transparency linkset data key
-// string  OPAQUE_LSD_KEY   = "is_transparent";
 
 setFacesAlpha(float trans) {
     integer i;
@@ -162,37 +149,14 @@ stateShield() {
     llSetTimerEvent(5.0);
 }
 
-// TODO: Add support for selecting and setting faces/textures
-integer num_Textures(string prefix) {
-    integer num_textures = 0;
-    integer count = llGetInventoryNumber(INVENTORY_TEXTURE);
-
-    integer i;
-    integer position;
-    string texture_name;
-    for (i = 0; i < count; ++i) {
-        texture_name = llGetInventoryName(INVENTORY_TEXTURE, i);
-        position = llSubStringIndex(texture_name, prefix);
-        if (position != -1) {
-            num_textures += 1;
-        }
-    }
-    return num_textures;
-}
-
-list get_Textures(string prefix) {
+list get_Textures() {
     list texture_list = [];
     integer count = llGetInventoryNumber(INVENTORY_TEXTURE);
 
-    // Populate list (Dialogs only show up to 12 buttons at once)
+    // Populate list of inventory texture names
     integer i;
-    integer position;
-    string texture_name;
     for (i = 0; i < count; ++i) {
-        texture_name = llGetInventoryName(INVENTORY_TEXTURE, i);
-        if (prefix == llGetSubString(texture_name, 0, llStringLength(prefix) - 1)) {
-            texture_list += llDeleteSubString(texture_name, 0, 6);
-        }
+        texture_list += llGetInventoryName(INVENTORY_TEXTURE, i);
     }
     return texture_list;
 }
@@ -303,24 +267,31 @@ displayTextMenu() {
     dialogHandle = llListen(dialogChannel, "", tcher, "");
 
     menuMessage = "\nTruth & Beauty Privacy Shield Texture Menu";
-    text_menu = get_Textures(texture_prefix);
+
+    // Populate the Face menu entries, if only one textured face set selected face
+    integer i;
+    if (total > 1) {
+        for (i = 0; i < total; ++i) {
+            face_menu += "Face " + llList2String(faces, i);
+        }
+    } else {
+        selected_face = llList2Integer(faces, 0);
+    }
+
+    // Populate the inventory textures menu entries
+    text_menu = get_Textures();
     if (text_menu) {
         menuMessage += "\nTexture THIS SHIELD ONLY\n";
+        if (selected_face != -1) {
+            menuMessage += "\nCurrent texture: " + llGetTexture(selected_face) + "\n";
+        }
         if (total > 1) {
-            menuMessage += "\nSelect a face\n";
+            menuMessage += "\nSelect a face to retexture\n";
             menuMessage += "\nThen select the texture to use on that face\n";
         } else {
             menuMessage += "\nSelect the texture to use on this face\n";
         }
 
-        integer i;
-        if (total > 1) {
-            for (i = 0; i < total; ++i) {
-                face_menu += "Face " + llList2String(faces, i);
-            }
-        } else {
-            selected_face = llList2Integer(faces, 0);
-        }
         face_menu += text_menu;
         face_menu += ["BACK", "RESTORE", "EXIT"];
     } else {
@@ -367,52 +338,23 @@ ShowMenu(string msg, list fm) {
     llSetTimerEvent(60);   // If no response in time, return to previous state
 }
 
-// Truncates floating point representation to a single decimal digit
-string FormatFloat(float num) {
-    string ret;
-    integer scale;
-
-    scale = (integer)(num * 10);
-    ret = (string)scale;
-    integer length = llStringLength(ret);
-
-    // Safety check for strings that are too short
-    if (length < 2) return ret;
-
-    // Split the string: everything up to the last char + "." + the last char
-    return llGetSubString(ret, 0, length - 2) + "." + llGetSubString(ret, -1, -1);
-}
-
-string stripTrailingZeros(string str) {
-    // Only proceed if there is a decimal point to avoid mangling whole numbers like "100"
-    if (llSubStringIndex(str, ".") != -1) {
-        while (llGetSubString(str, -1, -1) == "0") {
-            str = llDeleteSubString(str, -1, -1);
-        }
-        // Optional: Remove the trailing decimal point if it's now the last character
-        if (llGetSubString(str, -1, -1) == ".") {
-            str = llDeleteSubString(str, -1, -1);
-        }
-    }
-    return str;
-}
-
 // TODO: Add support for storing settings in prim K/V linkset datastore
 // Writes the provided key/value pair to the prim's linkset datastore
-integer linksetDataWrite(key id, string lsdKey, string value, integer link, string cfg) {
-    string val = llStringTrim(value, STRING_TRIM);
-    integer returnCode = llLinksetDataWrite(lsdKey, val);
-    if (returnCode == LINKSETDATA_OK) {
-        llMessageLinked(LINK_THIS, link, val, "");
-        llRegionSayTo(id, 0, "[Privacy Shield] " + cfg + " saved.");
-    } else if (returnCode == LINKSETDATA_NOUPDATE) {
-        llMessageLinked(LINK_THIS, link, val, "");
-        llRegionSayTo(id, 0, "[Privacy Shield] " + cfg + " already stored and is identical.");
-    } else {
-        llRegionSayTo(id, 0, "[Privacy Shield] " + cfg + " save failed (code " + (string)returnCode + ").");
-    }
-    return returnCode;
-}
+//
+// integer linksetDataWrite(key id, string lsdKey, string value, integer link, string cfg) {
+//     string val = llStringTrim(value, STRING_TRIM);
+//     integer returnCode = llLinksetDataWrite(lsdKey, val);
+//     if (returnCode == LINKSETDATA_OK) {
+//         llMessageLinked(LINK_THIS, link, val, "");
+//         llRegionSayTo(id, 0, "[Privacy Shield] " + cfg + " saved.");
+//     } else if (returnCode == LINKSETDATA_NOUPDATE) {
+//         llMessageLinked(LINK_THIS, link, val, "");
+//         llRegionSayTo(id, 0, "[Privacy Shield] " + cfg + " already stored and is identical.");
+//     } else {
+//         llRegionSayTo(id, 0, "[Privacy Shield] " + cfg + " save failed (code " + (string)returnCode + ").");
+//     }
+//     return returnCode;
+// }
 
 default {
     state_entry() {
@@ -454,7 +396,6 @@ default {
                 texts += [i, currentTex];
             }
         }
-        strid = llList2ListStrided(texts, 0, -1, 2);
 
         total_faces  = llGetListLength(faces);
         // Compute a large negative channel number based on the object owner
@@ -962,11 +903,11 @@ state text
             // Face #
             selected_face = (integer)(llGetSubString(message, 5, -1));
         } else if (message == "RESTORE") {
-            integer len = llGetListLength(strid);
+            integer len = llGetListLength(texts);
             integer i = 0;
             while (i < len) {
                 // current
-                llSetTexture(llList2String(strid, i + 1), llList2Integer(strid, i));
+                llSetTexture(llList2String(texts, i + 1), llList2Integer(texts, i));
                 i += 2; // Jump to the next stride
             }
         } else if (message == "BACK") {
@@ -984,16 +925,15 @@ state text
                 state cloaked;
             }
         } else {
-            string txt_name = texture_prefix + message;
-            if (llGetInventoryType(txt_name) == INVENTORY_TEXTURE) {
+            if (llGetInventoryType(message) == INVENTORY_TEXTURE) {
                 if (selected_face == -1) {
                     llRegionSayTo(tcher, 0, "Select a face to texture first");
                     state warn;
                 } else {
-                    llSetTexture(txt_name, selected_face);
+                    llSetTexture(message, selected_face);
                 }
             } else {
-                llRegionSayTo(tcher, 0, "The texture is missing or not a texture: " + txt_name);
+                llRegionSayTo(tcher, 0, "The texture is missing or not a texture: " + message);
             }
         }
         // Re-send the dialog to keep the menu open
