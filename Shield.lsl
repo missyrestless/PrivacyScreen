@@ -224,6 +224,8 @@ displayMainMenu() {
         menuMessage += "\nMenu actions effect ONLY THIS SHIELD\n";
         menuMessage += "\nALL = Menu actions effect all shields in region";
     }
+    menuMessage += "\nSIZE = Open the Shield resize menu";
+    menuMessage += "\nTEXTURE = Open the Shield texture menu";
     if (GROUP) {
         menuMessage += "\nOWNER = Owner only access";
     } else {
@@ -292,24 +294,35 @@ displaySizeMenu() {
 }
 
 displayTextMenu() {
-    llListenRemove(dialogHandle);
-    dialogHandle = llListen(dialogChannel, "", tcher, "");
+    integer total = llGetListLength(faces);
     list face_menu = ["BACK", "RESTORE", "EXIT"];
     list text_menu = [];
     string menuMessage;
 
+    llListenRemove(dialogHandle);
+    dialogHandle = llListen(dialogChannel, "", tcher, "");
+
     menuMessage = "\nTruth & Beauty Privacy Shield Texture Menu";
     text_menu = get_Textures(texture_prefix);
     if (text_menu) {
-        menuMessage += "\nTexture this shield only\n";
-        menuMessage += "\nSelect a face then select the texture to use on that face\n";
+        menuMessage += "\nTexture THIS SHIELD ONLY\n";
+        if (total > 1) {
+            menuMessage += "\nSelect a face\n";
+            menuMessage += "\nThen select the texture to use on that face\n";
+        } else {
+            menuMessage += "\nSelect the texture to use on this face\n";
+        }
 
-        integer total = llGetListLength(faces);
         integer i;
-        for (i = 0; i < total; ++i) {
-            face_menu += "Face " + llList2String(faces, i);
+        if (total > 1) {
+            for (i = 0; i < total; ++i) {
+                face_menu += "Face " + llList2String(faces, i);
+            }
+        } else {
+            selected_face = llList2Integer(faces, 0);
         }
         face_menu += text_menu;
+        face_menu += ["BACK", "RESTORE", "EXIT"];
     } else {
         menuMessage += "\nNO TEXTURES FOUND\n";
     }
@@ -327,9 +340,13 @@ ShowMenu(string msg, list fm) {
         if (pageNumber < 1) pageNumber = 1;
         if (pageNumber > totalPages) pageNumber = totalPages;
 
+        integer nump = 12;
+        if (pageNumber > 1) nump--;
+        if (pageNumber < totalPages) nump--;
+
         // Calculate slice indices
-        integer start = (pageNumber - 1) * 10;
-        integer end = start + 9;
+        integer start = (pageNumber - 1) * nump;
+        integer end = start + (nump -1);
 
         // Grab the 10 (or fewer) items for this page
         list displayList = llList2List(fm, start, end);
@@ -424,6 +441,7 @@ default {
         integer i;
         // Find which faces are textured with non-default textures
         faces = [];
+        texts = [];
         for (i = 0; i < numOfSides; ++i) {
             currentTex = llGetTexture(i);
             if ((currentTex != DEFAULT_PLYWOOD) &&
