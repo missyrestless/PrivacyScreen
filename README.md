@@ -65,6 +65,10 @@ The dialog menu provides a status indicator for all Truth &amp; Beauty Privacy S
 - Enable/Disable Touch to activate/deactivate shields
 - Set shields to phantom or solid when active
 - Resize shields to standard formats
+- Retexture each shield with textures in the Shield inventory
+  - New textures can be added if their name begins with `Shield_`
+  - Best if new textures are in 2:1 aspect ration, width twice the height
+  - Keep texture names short, less than 18 characters, e.g. `Shield_MyFavorite`
 - Apply changes to a single shield or all shields in the region owned by the same owner
 - Set each shield to access by owner only or members of the shield's group
   - If group access is enabled, group members can manage shields via the dialog menu only

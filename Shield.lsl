@@ -23,10 +23,12 @@
 // 2026-Aug-12 Multiple textured faces            //
 // 2026-Aug-13 Add timers to lock state changes   //
 // 2026-Aug-16 Add dialog menu management         //
+// 2026-Aug-17 Add texture menu management        //
 //                                                //
 ////////////////////////////////////////////////////
 
 string  VERSION = "1.1.1";
+
 integer ALL     = TRUE;      // Set to TRUE to effect all shields, FALSE for single shield
 integer FLASH   = FALSE;     // Set to TRUE to flash when shield activates, FALSE to disable
 integer GROUP   = FALSE;     // Set to TRUE to allow group members to manage, FALSE for owner only
@@ -35,8 +37,11 @@ integer TOUCH   = FALSE;     // Set to TRUE to enable touch toggles, FALSE to di
 integer listenerID;          // Not yet used
 integer objListenID;         // Not yet used
 integer dialogHandle;        // Dialog Menu listener handle, channel, boolean
+integer listenHandle;
 integer dialogChannel;
 integer pageNumber    = 1;
+integer defaultState  = TRUE;
+integer selected_face = -1;
 integer listenChannel = 0;   // Channel for chat and gestures
 integer objChannel;          // Channel for communication between screens, based on owner
 integer shieldStatus;        // TRUE if screen active, FALSE if screen is transparent
@@ -45,13 +50,15 @@ integer rcv_lower;           // Boolean indicating recieved lower screen message
 integer rcv_raise;           // Boolean indicating recieved raise screen message
 integer rcv_state;           // Boolean indicating recieved state message
 
-integer defaultState = TRUE;
 key     owner = NULL_KEY;
 key     tcher = NULL_KEY;
 list    faces = [];          // Faces with screen texture, all other faces will be transparent
+list    texts = [];          // Face & Texture of faces with screen texture, for use as strided list
+list    strid = [];          // Strided list of Faces & Textures
 float   cloakSpeed =  0.1;
 float   def_size_x = -1.0;
 float   def_size_y = -1.0;
+string  texture_prefix = "Shield_"; // Textures in object inventory beginning with Shield_ will be used
 vector  prim_size;
 
 // Linkset Data Keys
@@ -183,9 +190,8 @@ list get_Textures(string prefix) {
     string texture_name;
     for (i = 0; i < count; ++i) {
         texture_name = llGetInventoryName(INVENTORY_TEXTURE, i);
-        position = llSubStringIndex(texture_name, prefix);
-        if (position != -1) {
-            texture_list += [texture_name];
+        if (prefix == llGetSubString(texture_name, 0, llStringLength(prefix) - 1)) {
+            texture_list += llDeleteSubString(texture_name, 0, 6);
         }
     }
     return texture_list;
@@ -212,16 +218,16 @@ displayMainMenu() {
 
     menuMessage = "\nTruth & Beauty Privacy Shield " + VERSION;
     if (ALL) {
-        menuMessage += "\nMenu actions effect all shields in region\n";
+        menuMessage += "\nMenu actions effect ALL SHIELDS IN REGION\n";
         menuMessage += "\nSINGLE = Menu actions effect only this shield";
     } else {
-        menuMessage += "\nMenu actions effect only this shield\n";
+        menuMessage += "\nMenu actions effect ONLY THIS SHIELD\n";
         menuMessage += "\nALL = Menu actions effect all shields in region";
     }
     if (GROUP) {
-        menuMessage += "\nOWNER = Restrict shield management to owner";
+        menuMessage += "\nOWNER = Owner only access";
     } else {
-        menuMessage += "\nGROUP = Allow group members and owner to manage";
+        menuMessage += "\nGROUP = Allow group members to manage";
     }
     if (FLASH) {
         menuMessage += "\nNO FLASH = Do not flash when activating shield";
@@ -238,7 +244,7 @@ displayMainMenu() {
     } else {
         menuMessage += "\nTOUCH ON = Touch to raise/lower shields\n";
     }
-    main_menu = ["UP", "DOWN", "INFO", "SIZE"];
+    main_menu = ["UP", "DOWN", "INFO", "SIZE", "TEXTURE"];
     if (ALL) {
         main_menu += ["SINGLE"];
     } else {
@@ -274,14 +280,40 @@ displaySizeMenu() {
     list size_menu = [];
     string menuMessage;
 
-    menuMessage = "\nResize the Truth & Beauty Privacy Shields";
-    menuMessage += "\nCurrent shield size:";
+    menuMessage = "\nTruth & Beauty Privacy Shield Resize Menu";
+    menuMessage = "\nResize this shield only\n";
+    menuMessage += "\nCurrent shield size (X=Width, Y=Height):";
     menuMessage += "\n\tX: " + (string) ( prim_size.x );
     menuMessage += "\n\tY: " + (string) ( prim_size.y );
     menuMessage += "\n\tZ: " + (string) ( prim_size.z );
     size_menu = ["24x12", "32x16", "40x20", "48x24", "56x28", "64x32"];
-    size_menu += ["RESTORE", "BACK", "EXIT"];
+    size_menu += ["BACK", "RESTORE", "EXIT"];
     ShowMenu(menuMessage, size_menu);
+}
+
+displayTextMenu() {
+    llListenRemove(dialogHandle);
+    dialogHandle = llListen(dialogChannel, "", tcher, "");
+    list face_menu = ["BACK", "RESTORE", "EXIT"];
+    list text_menu = [];
+    string menuMessage;
+
+    menuMessage = "\nTruth & Beauty Privacy Shield Texture Menu";
+    text_menu = get_Textures(texture_prefix);
+    if (text_menu) {
+        menuMessage += "\nTexture this shield only\n";
+        menuMessage += "\nSelect a face then select the texture to use on that face\n";
+
+        integer total = llGetListLength(faces);
+        integer i;
+        for (i = 0; i < total; ++i) {
+            face_menu += "Face " + llList2String(faces, i);
+        }
+        face_menu += text_menu;
+    } else {
+        menuMessage += "\nNO TEXTURES FOUND\n";
+    }
+    ShowMenu(menuMessage, face_menu);
 }
 
 // Show the specific menu page
@@ -304,7 +336,7 @@ ShowMenu(string msg, list fm) {
 
         // Add navigation buttons to the bottom of the list
         if (totalPages > 1) {
-            if (pageNumber > 1) displayList += ["<<< Back"];
+            if (pageNumber > 1) displayList += ["<<< Prev"];
             if (pageNumber < totalPages) displayList += ["Next >>>"];
         }
 
@@ -391,6 +423,7 @@ default {
         integer numOfSides = llGetNumberOfSides();
         integer i;
         // Find which faces are textured with non-default textures
+        faces = [];
         for (i = 0; i < numOfSides; ++i) {
             currentTex = llGetTexture(i);
             if ((currentTex != DEFAULT_PLYWOOD) &&
@@ -400,8 +433,10 @@ default {
                 (currentTex != "*Default Transparent Texture") &&
                 (currentTex != NULL_KEY)) {
                 faces += i;
+                texts += [i, currentTex];
             }
         }
+        strid = llList2ListStrided(texts, 0, -1, 2);
 
         total_faces  = llGetListLength(faces);
         // Compute a large negative channel number based on the object owner
@@ -474,8 +509,7 @@ default {
         }
     }
 
-    timer()
-    {
+    timer() {
         rcv_lower = FALSE;
         rcv_raise = FALSE;
         rcv_state = FALSE;
@@ -643,8 +677,7 @@ state cloaked {
         }
     }
 
-    timer()
-    {
+    timer() {
         rcv_lower = FALSE;
         rcv_raise = FALSE;
         rcv_state = FALSE;
@@ -721,8 +754,7 @@ state cloaked {
 
 state menu
 {
-    state_entry()
-    {
+    state_entry() {
         displayMainMenu();
     }
 
@@ -756,6 +788,8 @@ state menu
             ALL = FALSE;
         } else if (message == "SIZE") {
             state size;
+        } else if (message == "TEXTURE") {
+            state text;
         } else if (message == "GROUP") {
             if (id == owner) {
                 if (ALL) {
@@ -826,8 +860,7 @@ state menu
         displayMainMenu();
     }
 
-    timer()
-    {
+    timer() {
         // Return to the previous state
         if (defaultState) {
             state default;
@@ -836,16 +869,14 @@ state menu
         }
     }
 
-    state_exit()
-    {
+    state_exit() {
         llSetTimerEvent(0);
     }
 }
 
 state size
 {
-    state_entry()
-    {
+    state_entry() {
         prim_size = llGetScale();
         displaySizeMenu();
     }
@@ -887,8 +918,7 @@ state size
         displaySizeMenu();
     }
 
-    timer()
-    {
+    timer() {
         // Return to the previous state
         if (defaultState) {
             state default;
@@ -897,8 +927,96 @@ state size
         }
     }
 
-    state_exit()
-    {
+    state_exit() {
         llSetTimerEvent(0);
     }
 }
+
+state text
+{
+    state_entry() {
+        selected_face = -1;
+        displayTextMenu();
+    }
+
+    listen(integer channel, string name, key id, string message) {
+        if ("Face " == llGetSubString(message, 0, 4)) {
+            // Face #
+            selected_face = (integer)(llGetSubString(message, 5, -1));
+        } else if (message == "RESTORE") {
+            integer len = llGetListLength(strid);
+            integer i = 0;
+            while (i < len) {
+                // current
+                llSetTexture(llList2String(strid, i + 1), llList2Integer(strid, i));
+                i += 2; // Jump to the next stride
+            }
+        } else if (message == "BACK") {
+            state menu;
+        // Handle pagination for multi page menus
+        } else if (message == "<<< Prev") {
+            pageNumber--;
+        } else if (message == "Next >>>") {
+            pageNumber++;
+        } else if (message == "EXIT") {
+            // Return to the previous state
+            if (defaultState) {
+                state default;
+            } else {
+                state cloaked;
+            }
+        } else {
+            string txt_name = texture_prefix + message;
+            if (llGetInventoryType(txt_name) == INVENTORY_TEXTURE) {
+                if (selected_face == -1) {
+                    llRegionSayTo(tcher, 0, "Select a face to texture first");
+                    state warn;
+                } else {
+                    llSetTexture(txt_name, selected_face);
+                }
+            } else {
+                llRegionSayTo(tcher, 0, "The texture is missing or not a texture: " + txt_name);
+            }
+        }
+        // Re-send the dialog to keep the menu open
+        displayTextMenu();
+    }
+
+    timer() {
+        // Return to the previous state
+        if (defaultState) {
+            state default;
+        } else {
+            state cloaked;
+        }
+    }
+
+    state_exit() {
+        llSetTimerEvent(0);
+    }
+}
+
+state warn
+{
+    state_entry() {
+        integer warnChannel = -999999;
+        llListenRemove(listenHandle);
+        listenHandle = llListen(warnChannel, "", tcher, "");
+
+        llDialog(tcher, "\nSelect a face to texture first\n", ["OK"], warnChannel);
+        llSetTimerEvent(30.0); // 30-second timer
+    }
+
+    listen(integer channel, string name, key id, string message) {
+        llSetTimerEvent(0.0);       // Stop timer
+        llListenRemove(listenHandle); // Remove listener
+        state text;
+    }
+
+    timer() {
+        llSetTimerEvent(0.0);       // Stop timer
+        llListenRemove(listenHandle); // Remove listener
+        state text;
+    }
+}
+
