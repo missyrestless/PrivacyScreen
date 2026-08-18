@@ -24,6 +24,8 @@
 // 2026-Aug-13 Add timers to lock state changes   //
 // 2026-Aug-16 Add dialog menu management         //
 // 2026-Aug-17 Add texture menu management        //
+// 2026-Aug-18 Support for one and two sided      //
+// 2026-Aug-19 Use linkset datastore for config   //
 //                                                //
 ////////////////////////////////////////////////////
 
@@ -61,7 +63,29 @@ list    texts = [];          // Face & Texture of faces with screen texture, for
 float   cloakSpeed =  0.1;
 float   def_size_x = -1.0;
 float   def_size_y = -1.0;
+string  front_texture;
+string  back_texture;
 vector  prim_size;
+vector  position;
+
+// Linkset Data Keys
+//
+// Prim Size linkset data key
+string  SIZE_LSD_KEY      = "size";
+//  Prim Position linkset data key
+string  POSITION_LSD_KEY  = "position";
+// Prim Textures linkset data key
+string  TEXTURES_LSD_KEY  = "textures";
+// Group access linkset data key
+string  GROUP_LSD_KEY     = "group";
+// Double/Single sided linkset data key
+string  DOUBLE_LSD_KEY    = "double_sided";
+// Front face texture linkset data key
+string  ZERO_LSD_KEY      = "front_texture";
+// Back face texture linkset data key
+string  FIVE_LSD_KEY      = "back_texture";
+// Opaque/Transparent linkset data key
+string  STATUS_LSD_KEY    = "status";
 
 setFacesAlpha(float trans) {
     integer i;
@@ -414,23 +438,73 @@ ShowMenu(string msg, list fm) {
     llSetTimerEvent(60);   // If no response in time, return to previous state
 }
 
-// TODO: Add support for storing settings in prim K/V linkset datastore
+GetDatastoreValues() {
+    //
+    // Retrieve any configuration values stored in the linkset datastore
+    //
+    // Prim Size linkset data key
+    string linksetValue = llLinksetDataRead(SIZE_LSD_KEY);
+    if (linksetValue != "") {
+        prim_size = (vector)linksetValue;
+    }
+
+    //  Prim Position linkset data key
+    linksetValue = llLinksetDataRead(POSITION_LSD_KEY);
+    if (linksetValue != "") {
+        position = (vector)linksetValue;
+    }
+
+    // Prim Textures linkset data key
+    linksetValue = llLinksetDataRead(TEXTURES_LSD_KEY);
+    if (linksetValue != "") {
+        texts = (list)linksetValue;
+    }
+
+    // Group access linkset data key
+    linksetValue = llLinksetDataRead(GROUP_LSD_KEY);
+    if (linksetValue != "") {
+        GROUP = (integer)linksetValue;
+    }
+
+    // Double/Single sided linkset data key
+    linksetValue = llLinksetDataRead(DOUBLE_LSD_KEY);
+    if (linksetValue != "") {
+        DOUBLE = (integer)linksetValue;
+    }
+
+    // Front texture (Face 0)
+    linksetValue = llLinksetDataRead(ZERO_LSD_KEY);
+    if ((linksetValue != "") && (llGetInventoryType(linksetValue) == INVENTORY_TEXTURE)) {
+        front_texture = linksetValue;
+    }
+
+    // Back texture (Face 5)
+    linksetValue = llLinksetDataRead(FIVE_LSD_KEY);
+    if ((linksetValue != "") && (llGetInventoryType(linksetValue) == INVENTORY_TEXTURE)) {
+        back_texture = linksetValue;
+    }
+
+    // Transparency
+    linksetValue = llLinksetDataRead(STATUS_LSD_KEY);
+    if (linksetValue != "") {
+        shieldStatus = (integer)linksetValue;
+    }
+}
+
+
 // Writes the provided key/value pair to the prim's linkset datastore
-//
-// integer linksetDataWrite(key id, string lsdKey, string value, integer link, string cfg) {
-//     string val = llStringTrim(value, STRING_TRIM);
-//     integer returnCode = llLinksetDataWrite(lsdKey, val);
-//     if (returnCode == LINKSETDATA_OK) {
-//         llMessageLinked(LINK_THIS, link, val, "");
-//         llRegionSayTo(id, 0, "[Privacy Shield] " + cfg + " saved.");
-//     } else if (returnCode == LINKSETDATA_NOUPDATE) {
-//         llMessageLinked(LINK_THIS, link, val, "");
-//         llRegionSayTo(id, 0, "[Privacy Shield] " + cfg + " already stored and is identical.");
-//     } else {
-//         llRegionSayTo(id, 0, "[Privacy Shield] " + cfg + " save failed (code " + (string)returnCode + ").");
-//     }
-//     return returnCode;
-// }
+integer linksetDataWrite(key id, string lsdKey, string value, integer link, string cfg) {
+    string val = llStringTrim(value, STRING_TRIM);
+    integer returnCode = llLinksetDataWrite(lsdKey, val);
+    if (returnCode == LINKSETDATA_OK) {
+        llRegionSayTo(id, 0, "[Privacy Shield] " + cfg + " saved.");
+    } else if (returnCode == LINKSETDATA_NOUPDATE) {
+        llRegionSayTo(id, 0, "[Privacy Shield] " + cfg + " already stored and is identical.");
+    } else {
+        llRegionSayTo(id, 0, "[Privacy Shield] " + cfg + " save failed (code " + (string)returnCode + ").");
+    }
+    return returnCode;
+}
 
 default {
     state_entry() {
