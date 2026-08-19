@@ -60,11 +60,13 @@ key     owner = NULL_KEY;
 key     tcher = NULL_KEY;
 list    faces = [];          // Faces with screen texture, all other faces will be transparent
 list    texts = [];          // Face & Texture of faces with screen texture, for use as strided list
+list    start = [];          // Original Textures of faces, used by menu restore
 float   cloakSpeed =  0.1;
 float   def_size_x = -1.0;
 float   def_size_y = -1.0;
 string  front_texture;
 string  back_texture;
+string  linksetValue;
 vector  prim_size;
 vector  position;
 
@@ -443,7 +445,7 @@ GetDatastoreValues() {
     // Retrieve any configuration values stored in the linkset datastore
     //
     // Prim Size linkset data key
-    string linksetValue = llLinksetDataRead(SIZE_LSD_KEY);
+    linksetValue = llLinksetDataRead(SIZE_LSD_KEY);
     if (linksetValue != "") {
         prim_size = (vector)linksetValue;
     }
@@ -491,9 +493,31 @@ GetDatastoreValues() {
     }
 }
 
+SetDatastoreValues() {
+    //
+    // Set all configuration values stored in the linkset datastore
+    // Called from on_rez and when Save button is clicked
+    //
+    // Prim Size linkset data key
+    linksetDataWrite(owner, SIZE_LSD_KEY, (string)prim_size, "Shield Size");
+    //  Prim Position linkset data key
+    linksetDataWrite(owner, POSITION_LSD_KEY, (string)position, "Shield Position");
+    // Prim Textures linkset data key
+    linksetDataWrite(owner, TEXTURES_LSD_KEY, (string)texts, "Shield Textures");
+    // Group access linkset data key
+    linksetDataWrite(owner, GROUP_LSD_KEY, (string)GROUP, "Group Access");
+    // Double/Single sided linkset data key
+    linksetDataWrite(owner, DOUBLE_LSD_KEY, (string)DOUBLE, "Double/Single Sided");
+    // Front texture (Face 0)
+    linksetDataWrite(owner, ZERO_LSD_KEY, (string)front_texture, "Front Side Texture");
+    // Back texture (Face 5)
+    linksetDataWrite(owner, FIVE_LSD_KEY, (string)back_texture, "Back Side Texture");
+    // Transparency
+    linksetDataWrite(owner, STATUS_LSD_KEY, (string)shieldStatus, "Shield Status");
+}
 
 // Writes the provided key/value pair to the prim's linkset datastore
-integer linksetDataWrite(key id, string lsdKey, string value, integer link, string cfg) {
+integer linksetDataWrite(key id, string lsdKey, string value, string cfg) {
     string val = llStringTrim(value, STRING_TRIM);
     integer returnCode = llLinksetDataWrite(lsdKey, val);
     if (returnCode == LINKSETDATA_OK) {
@@ -511,6 +535,7 @@ default {
         owner        = llGetOwner();
         tcher        = NULL_KEY;
         defaultState = TRUE;
+        GetDatastoreValues();
         if (llGetAlpha(ALL_SIDES) > 0.0) {
             shieldStatus = TRUE;
         } else {
@@ -603,6 +628,11 @@ default {
         }
     }
 
+    moving_end() {
+        position = llGetPos();
+        linksetDataWrite(owner, POSITION_LSD_KEY, (string)position, "Shield Position");
+    }
+
     timer() {
         rcv_lower = FALSE;
         rcv_raise = FALSE;
@@ -682,6 +712,7 @@ default {
 
     on_rez(integer num) {
         llResetScript();
+        owner = llGetOwner();
         raiseShield();
         string slurl = getShieldSlurl();
         llOwnerSay("The Truth & Beauty Privacy Shield located at " + slurl + " is now active.");
@@ -696,6 +727,20 @@ default {
         prim_size = llGetScale();
         def_size_x = prim_size.x;
         def_size_y = prim_size.y;
+        linksetValue = llLinksetDataRead(POSITION_LSD_KEY);
+        if (linksetValue != "") {
+            position = (vector)linksetValue;
+            llSetRegionPos(position);
+        } else {
+            position = llGetPos();
+        }
+        set_faces();
+        start = texts;
+        GROUP = FALSE;
+        DOUBLE = FALSE;
+        front_texture = llGetTexture(side_one);
+        back_texture = llGetTexture(side_two);
+        SetDatastoreValues();
     }
 
     changed(integer change) {
@@ -992,6 +1037,7 @@ state menu
     }
 
     state_exit() {
+        SetDatastoreValues();
         llSetTimerEvent(0);
     }
 }
@@ -1050,6 +1096,7 @@ state size
     }
 
     state_exit() {
+        SetDatastoreValues();
         llSetTimerEvent(0);
     }
 }
@@ -1066,11 +1113,11 @@ state text
             // Face #
             selected_face = (integer)(llGetSubString(message, 5, -1));
         } else if (message == "RESTORE") {
-            integer len = llGetListLength(texts);
+            integer len = llGetListLength(start);
             integer i = 0;
             while (i < len) {
                 // current
-                llSetTexture(llList2String(texts, i + 1), llList2Integer(texts, i));
+                llSetTexture(llList2String(start, i + 1), llList2Integer(start, i));
                 i += 2; // Jump to the next stride
             }
         } else if (message == "BACK") {
@@ -1113,6 +1160,7 @@ state text
     }
 
     state_exit() {
+        SetDatastoreValues();
         llSetTimerEvent(0);
     }
 }
@@ -1140,4 +1188,3 @@ state warn
         state text;
     }
 }
-
