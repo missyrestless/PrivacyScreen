@@ -463,12 +463,12 @@ GetDatastoreValues() {
     // Original Prim Textures linkset data key
     linksetValue = llLinksetDataRead(ORIGTEXT_LSD_KEY);
     if (linksetValue != "") {
-        origt = (list)linksetValue;
+        origt = llCSV2List(linksetValue);
     }
     // Prim Textures linkset data key
     linksetValue = llLinksetDataRead(TEXTURES_LSD_KEY);
     if (linksetValue != "") {
-        texts = (list)linksetValue;
+        texts = llCSV2List(linksetValue);
     }
     // Group access linkset data key
     linksetValue = llLinksetDataRead(GROUP_LSD_KEY);
@@ -507,7 +507,7 @@ SetDatastoreValues(key id) {
     //  Prim Position linkset data key
     linksetDataWrite(id, POSITION_LSD_KEY, (string)position, "Shield Position");
     // Prim Textures linkset data key
-    linksetDataWrite(id, TEXTURES_LSD_KEY, (string)texts, "Shield Textures");
+    linksetDataWrite(id, TEXTURES_LSD_KEY, llList2CSV(texts), "Shield Textures");
     // Group access linkset data key
     linksetDataWrite(id, GROUP_LSD_KEY, (string)GROUP, "Group Access");
     // Double/Single sided linkset data key
@@ -563,7 +563,7 @@ default {
         if (!llGetListLength(origt)) {
             origt = texts;
             // Original Prim Textures linkset data key
-            linksetDataWrite(owner, ORIGTEXT_LSD_KEY, (string)origt, "Original Shield Textures");
+            linksetDataWrite(owner, ORIGTEXT_LSD_KEY, llList2CSV(origt), "Original Shield Textures");
         }
         // Compute a large negative channel number based on the object owner
         // All screens owned by the same owner will use the same channel
@@ -757,7 +757,7 @@ default {
         set_faces();
         origt = texts;
         // Original Prim Textures linkset data key
-        linksetDataWrite(owner, ORIGTEXT_LSD_KEY, (string)origt, "Original Shield Textures");
+        linksetDataWrite(owner, ORIGTEXT_LSD_KEY, llList2CSV(origt), "Original Shield Textures");
         linksetValue = llLinksetDataRead(GROUP_LSD_KEY);
         if (linksetValue != "") {
             GROUP = (integer)linksetValue;
@@ -1100,8 +1100,15 @@ state size
             prim_size.x = 64.0;
             prim_size.y = 32.0;
         } else if (message == "RESTORE") {
-            prim_size.x = def_size_x;
-            prim_size.y = def_size_y;
+            linksetValue = llLinksetDataRead(ORIGSIZE_LSD_KEY);
+            if (linksetValue != "") {
+                orig_size = (vector)linksetValue;
+                prim_size = orig_size;
+            } else {
+                prim_size.x = def_size_x;
+                prim_size.y = def_size_y;
+                linksetDataWrite(owner, ORIGSIZE_LSD_KEY, (string)prim_size, "Original Shield Size");
+            }
         } else if (message == "BACK") {
             state menu;
         } else if (message == "EXIT") {
@@ -1144,10 +1151,21 @@ state text
             // Face #
             selected_face = (integer)(llGetSubString(message, 5, -1));
         } else if (message == "RESTORE") {
+            linksetValue = llLinksetDataRead(ORIGTEXT_LSD_KEY);
+            if (linksetValue != "") {
+                origt = llCSV2List(linksetValue);
+                texts = origt;
+            } else {
+                linksetDataWrite(owner, ORIGTEXT_LSD_KEY, llList2CSV(texts), "Original Shield Textures");
+                origt = texts;
+            }
             integer len = llGetListLength(origt);
+            if (len == 0) {
+                origt = texts;
+                len = llGetListLength(origt);
+            }
             integer i = 0;
             while (i < len) {
-                // current
                 llSetTexture(llList2String(origt, i + 1), llList2Integer(origt, i));
                 i += 2; // Jump to the next stride
             }
