@@ -29,7 +29,7 @@
 //                                                //
 ////////////////////////////////////////////////////
 
-string  VERSION = "1.1.1";
+string  VERSION = "1.1.2";
 
 integer ALL     = TRUE;      // Set to TRUE to effect all shields, FALSE for single shield
 integer DOUBLE  = FALSE;     // Set to TRUE for double sided shield, FALSE for single sided
@@ -42,7 +42,7 @@ integer objListenID;         // Not yet used
 integer dialogHandle;        // Dialog Menu listener handle, channel, boolean
 integer listenHandle;
 integer dialogChannel;
-integer pageNumber    = 1;
+integer pageNumber    = 1;   // Dialog Menu page number
 integer defaultState  = TRUE;
 integer selected_face = -1;
 integer side_one      = 0;   // Face number for front of shield
@@ -64,6 +64,7 @@ list    start = [];          // Original Textures of faces, used by menu restore
 float   cloakSpeed =  0.1;
 float   def_size_x = -1.0;
 float   def_size_y = -1.0;
+string  BLANK      = "5b53359e-59dd-d8a2-04c3-9e65134da47a";
 string  front_texture;
 string  back_texture;
 string  linksetValue;
@@ -100,7 +101,6 @@ setFacesAlpha(float trans) {
 set_faces() {
     string currentTex;
     string DEFAULT_PLYWOOD     = "89556747-24cb-43ed-920b-47caed15465f";
-    string BLANK               = "5b53359e-59dd-d8a2-04c3-9e65134da47a";
     string TTRANSPARENT        = "8dcd4a48-2d37-4909-9f78-f7a9eb4ef903";
     string WHITE_TEXTURE       = "5748decc-f629-461c-9a36-a35a221fe21f";
 
@@ -187,7 +187,6 @@ sidedShield() {
     string prefix = "Truth & Beauty Privacy Shield version " + VERSION;
     string slurl = getShieldSlurl();
     string location = " at " + slurl;
-    string blank = "5b53359e-59dd-d8a2-04c3-9e65134da47a";
     string msg;
 
     if (DOUBLE) {
@@ -197,7 +196,7 @@ sidedShield() {
         }
         msg = prefix + location + " is set to DOUBLE SIDED";
     } else {
-        llSetTexture(blank, side_two);
+        llSetTexture(BLANK, side_two);
         llSetAlpha(0.0, side_two);
         msg = prefix + location + " is set to SINGLE SIDED";
     }
@@ -548,6 +547,12 @@ default {
             def_size_y = prim_size.y;
         }
         set_faces();
+        if (total_faces > 1) {
+            DOUBLE = TRUE;
+        } else {
+            DOUBLE = FALSE;
+        }
+        linksetDataWrite(owner, DOUBLE_LSD_KEY, (string)DOUBLE, "Double/Single Sided");
         // Compute a large negative channel number based on the object owner
         // All screens owned by the same owner will use the same channel
         objChannel = 0x80000000 | (integer) ( "0x" + (string) owner );
@@ -736,8 +741,18 @@ default {
         }
         set_faces();
         start = texts;
-        GROUP = FALSE;
-        DOUBLE = FALSE;
+        linksetValue = llLinksetDataRead(GROUP_LSD_KEY);
+        if (linksetValue != "") {
+            GROUP = (integer)linksetValue;
+        } else {
+            GROUP = FALSE;
+        }
+        linksetValue = llLinksetDataRead(DOUBLE_LSD_KEY);
+        if (linksetValue != "") {
+            DOUBLE = (integer)linksetValue;
+        } else {
+            DOUBLE = FALSE;
+        }
         front_texture = llGetTexture(side_one);
         back_texture = llGetTexture(side_two);
         SetDatastoreValues();
@@ -754,7 +769,6 @@ state cloaked {
     state_entry() {
         defaultState = FALSE;
         tcher = NULL_KEY;
-        // TODO: Filter listen for group members
         listenerID = llListen(listenChannel, "", owner, "");
         objListenID = llListen(objChannel, "", NULL_KEY, "");
     }
