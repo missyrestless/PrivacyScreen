@@ -3,10 +3,6 @@
 - Todo
 * Done
 
-- Move settings to separate menu
-  - Add Horizontal/Vertical flip to settings menu
-- Add Transparent to textures menu
-- Highlight selected face
 - Position menu
   - Auto detect parcel border &amp; position?
 
@@ -26,3 +22,7 @@
 * Add support for multiple textures &amp; selection with dialog menu
 * Add single sided and double sided to dialog menu
 * Store settings in prim K/V storage
+* Move settings to separate menu
+  * Add Horizontal/Vertical flip to settings menu
+* Add Transparent to textures menu
+* Highlight selected face
