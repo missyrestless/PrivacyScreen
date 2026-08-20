@@ -55,6 +55,7 @@ integer rcv_lower;           // Boolean indicating recieved lower screen message
 integer rcv_raise;           // Boolean indicating recieved raise screen message
 integer rcv_state;           // Boolean indicating recieved state message
 integer rcv_sided;           // Boolean indicating recieved sided message
+integer isTransparent = FALSE;
 
 key     owner = NULL_KEY;
 key     tcher = NULL_KEY;
@@ -228,12 +229,19 @@ stateShield() {
     string slurl = getShieldSlurl();
     string location = " at " + slurl;
     string msg;
+    string phantom;
 
-    if (shieldStatus) {
-        msg = prefix + location + " is VISIBLE and SOLID";
+    if (llGetStatus(STATUS_PHANTOM)) {
+        phantom = "PHANTOM";
     } else {
-        msg = prefix + location + " is TRANSPARENT and PHANTOM";
+        phantom = "SOLID";
     }
+    if (shieldStatus) {
+        msg = prefix + location + " is UP and " + phantom;
+    } else {
+        msg = prefix + location + " is DOWN and " + phantom;
+    }
+
     if (tcher == owner) {
         llOwnerSay(msg);
     } else {
@@ -289,28 +297,13 @@ list arrange(list l) {
     return [];
 }
 
-displayMainMenu() {
+displayConfMenu() {
     llListenRemove(dialogHandle);
     dialogHandle = llListen(dialogChannel, "", tcher, "");
-    list main_menu = [];
+    list conf_menu = [];
     string menuMessage;
 
-    menuMessage = "\nTruth & Beauty Privacy Shield " + VERSION;
-    if (ALL) {
-        menuMessage += "\nMenu actions effect ALL SHIELDS IN REGION\n";
-        menuMessage += "\nSOLO = Menu actions effect only this shield";
-    } else {
-        menuMessage += "\nMenu actions effect ONLY THIS SHIELD\n";
-        menuMessage += "\nALL = Menu actions effect all shields in region";
-    }
-    // 1-Sided Shield or 2-Sided
-    if (DOUBLE) {
-        menuMessage += "\nONE SIDE = Sets Single Sided texturing";
-    } else {
-        menuMessage += "\nTWO SIDES = Sets Double Sided texturing";
-    }
-    menuMessage += "\nSIZE = Open the Shield resize menu";
-    menuMessage += "\nTEXTURE = Open the Shield texture menu";
+    menuMessage = "\nTruth & Beauty Privacy Shield " + VERSION + "\n";
     if (GROUP) {
         menuMessage += "\nOWNER = Owner only access";
     } else {
@@ -331,6 +324,54 @@ displayMainMenu() {
     } else {
         menuMessage += "\nTOUCH ON = Touch to raise/lower shields\n";
     }
+    conf_menu = ["UP", "DOWN", "INFO"];
+    if (GROUP) {
+        conf_menu += ["OWNER"];
+    } else {
+        conf_menu += ["GROUP"];
+    }
+    if (FLASH) {
+        conf_menu += ["NO FLASH"];
+    } else {
+        conf_menu += ["FLASH"];
+    }
+    if (SOLID) {
+        conf_menu += ["PHANTOM"];
+    } else {
+        conf_menu += ["SOLID"];
+    }
+    if (TOUCH) {
+        conf_menu += ["TOUCH OFF"];
+    } else {
+        conf_menu += ["TOUCH ON"];
+    }
+    conf_menu += ["BACK", "EXIT"];
+    ShowMenu(menuMessage, conf_menu);
+}
+
+displayMainMenu() {
+    llListenRemove(dialogHandle);
+    dialogHandle = llListen(dialogChannel, "", tcher, "");
+    list main_menu = [];
+    string menuMessage;
+
+    menuMessage = "\nTruth & Beauty Privacy Shield " + VERSION;
+    if (ALL) {
+        menuMessage += "\nMenu actions effect ALL SHIELDS IN REGION\n";
+        menuMessage += "\nSOLO = Menu actions effect only this shield";
+    } else {
+        menuMessage += "\nMenu actions effect ONLY THIS SHIELD\n";
+        menuMessage += "\nALL = Menu actions effect all shields in region";
+    }
+    // 1-Sided Shield or 2-Sided
+    if (DOUBLE) {
+        menuMessage += "\nONE SIDE = Sets Single Sided texturing";
+    } else {
+        menuMessage += "\nTWO SIDES = Sets Double Sided texturing";
+    }
+    menuMessage += "\nSETTINGS = Open the Shield settings menu";
+    menuMessage += "\nSIZE = Open the Shield resize menu";
+    menuMessage += "\nTEXTURE = Open the Shield texture menu";
     main_menu = ["UP", "DOWN", "INFO"];
     if (ALL) {
         main_menu += ["SOLO"];
@@ -342,27 +383,7 @@ displayMainMenu() {
     } else {
         main_menu += ["TWO SIDES"];
     }
-    main_menu += ["SIZE", "TEXTURE"];
-    if (GROUP) {
-        main_menu += ["OWNER"];
-    } else {
-        main_menu += ["GROUP"];
-    }
-    if (FLASH) {
-        main_menu += ["NO FLASH"];
-    } else {
-        main_menu += ["FLASH"];
-    }
-    if (SOLID) {
-        main_menu += ["PHANTOM"];
-    } else {
-        main_menu += ["SOLID"];
-    }
-    if (TOUCH) {
-        main_menu += ["TOUCH OFF"];
-    } else {
-        main_menu += ["TOUCH ON"];
-    }
+    main_menu += ["SETTINGS", "SIZE", "TEXTURE"];
     main_menu += ["EXIT"];
     ShowMenu(menuMessage, main_menu);
 }
@@ -403,6 +424,7 @@ displayTextMenu() {
         }
     } else {
         selected_face = llList2Integer(faces, 0);
+        llSetPrimitiveParams([PRIM_GLOW, selected_face, 0.3]);
     }
 
     // Populate the inventory textures menu entries
@@ -415,6 +437,12 @@ displayTextMenu() {
             menuMessage += "\nCurrent texture: " + llGetTexture(selected_face) + "\n";
             menuMessage += "\nSelect the texture to use on face " + (string)selected_face + "\n";
             face_menu = ["BACK", "RESTORE", "EXIT"];
+            face_menu += ["FLIP HORIZONTAL", "FLIP VERTICAL"];
+            if (isTransparent) {
+                face_menu += ["OPAQUE"];
+            } else {
+                face_menu += ["TRANSPARENT"];
+            }
             face_menu += text_menu;
         }
         face_menu += ["BACK", "RESTORE", "EXIT"];
@@ -459,7 +487,7 @@ ShowMenu(string msg, list fm) {
         // Send the dialog
         llDialog(tcher, msg, arrange(fm), dialogChannel);
     }
-    llSetTimerEvent(60);   // If no response in time, return to previous state
+    llSetTimerEvent(120);   // If no response in time, return to previous state
 }
 
 GetDatastoreValues() {
@@ -679,8 +707,10 @@ default {
                 FLASH = TRUE;
             } else if (cmd == "phantom") {
                 SOLID = FALSE;
+                llSetStatus(STATUS_PHANTOM, TRUE);
             } else if (cmd == "solid") {
                 SOLID = TRUE;
+                llSetStatus(STATUS_PHANTOM, FALSE);
             } else if (cmd == "touch off") {
                 TOUCH = FALSE;
             } else if (cmd == "touch on") {
@@ -907,8 +937,10 @@ state cloaked {
                 FLASH = TRUE;
             } else if (cmd == "phantom") {
                 SOLID = FALSE;
+                llSetStatus(STATUS_PHANTOM, TRUE);
             } else if (cmd == "solid") {
                 SOLID = TRUE;
+                llSetStatus(STATUS_PHANTOM, FALSE);
             } else if (cmd == "touch off") {
                 TOUCH = FALSE;
             } else if (cmd == "touch on") {
@@ -1071,6 +1103,65 @@ state menu
             } else {
                 if (id) llRegionSayTo(id, 0, "Only the owner can set the shields to owner only");
             }
+        } else if (message == "SETTINGS") {
+            state settings;
+        } else if (message == "EXIT") {
+            // Return to the previous state
+            if (defaultState) {
+                state default;
+            } else {
+                state cloaked;
+            }
+        }
+        // Re-send the dialog to keep the menu open
+        displayMainMenu();
+    }
+
+    timer() {
+        // Return to the previous state
+        if (defaultState) {
+            state default;
+        } else {
+            state cloaked;
+        }
+    }
+
+    state_exit() {
+        SetDatastoreValues(tcher);
+        llSetTimerEvent(0);
+    }
+}
+
+state settings
+{
+    state_entry() {
+        displayConfMenu();
+    }
+
+    listen(integer channel, string name, key id, string message) {
+        if (message == "UP") {
+            rcv_raise = TRUE;
+            if (ALL) {
+                // Send the message to other objects in region with same owner listening on this channel
+                llRegionSay(objChannel, "Shields Up");
+            }
+            raiseShield();
+            defaultState = TRUE;
+        } else if (message == "DOWN") {
+            rcv_lower = TRUE;
+            if (ALL) {
+                // Send the message to other objects in region with same owner
+                llRegionSay(objChannel, "Shields Down");
+            }
+            lowerShield();
+            defaultState = FALSE;
+        } else if (message == "INFO") {
+            rcv_state = TRUE;
+            if (ALL) {
+                // Send the message to other objects in region with same owner listening on this channel
+                llRegionSay(objChannel, "Shields Info");
+            }
+            stateShield();
         } else if (message == "NO FLASH") {
             if (ALL) {
                 // Send the message to other objects in region with same owner listening on this channel
@@ -1109,6 +1200,8 @@ state menu
                 llRegionSay(objChannel, "Touch On");
             }
             TOUCH = TRUE;
+        } else if (message == "BACK") {
+            state menu;
         } else if (message == "EXIT") {
             // Return to the previous state
             if (defaultState) {
@@ -1118,7 +1211,7 @@ state menu
             }
         }
         // Re-send the dialog to keep the menu open
-        displayMainMenu();
+        displayConfMenu();
     }
 
     timer() {
@@ -1210,9 +1303,26 @@ state text
     }
 
     listen(integer channel, string name, key id, string message) {
+        vector scale_vector;
         if ("Face " == llGetSubString(message, 0, 4)) {
             // Face #
             selected_face = (integer)(llGetSubString(message, 5, -1));
+            llSetPrimitiveParams([PRIM_GLOW, ALL_SIDES, 0.0]);
+            llSetPrimitiveParams([PRIM_GLOW, selected_face, 0.3]);
+        } else if (message == "FLIP HORIZONTAL") {
+            // Flips the texture horizontally on selected face, keeping vertical scale
+            scale_vector = llGetTextureScale(selected_face);
+            llScaleTexture(-(scale_vector.x), scale_vector.y, selected_face);
+        } else if (message == "FLIP VERTICAL") {
+            // Flips the texture vertically on selected face, keeping horizontal scale
+            scale_vector = llGetTextureScale(selected_face);
+            llScaleTexture(scale_vector.x, -(scale_vector.y), selected_face);
+        } else if (message == "OPAQUE") {
+            llSetAlpha(1.0, selected_face);
+            isTransparent = FALSE;
+        } else if (message == "TRANSPARENT") {
+            llSetAlpha(0.0, selected_face);
+            isTransparent = TRUE;
         } else if (message == "RESTORE") {
             linksetValue = llLinksetDataRead(ORIGTEXT_LSD_KEY);
             if (linksetValue != "") {
@@ -1272,6 +1382,7 @@ state text
     }
 
     state_exit() {
+        llSetPrimitiveParams([PRIM_GLOW, ALL_SIDES, 0.0]);
         front_texture = llGetTexture(side_one);
         back_texture = llGetTexture(side_two);
         SetDatastoreValues(tcher);
