@@ -1,13 +1,15 @@
 # Truth and Beauty Privacy Shield
 
-The `Shield` LSL script is used by the Truth &amp; Beauty Privacy Shields, scripted land shields with easy transparency/phantom on/off. All Truth &amp; Beauty Privacy Shields in the same region with the same owner communicate with each other. Activating or deactivating one shield activates or deactivates them all.
+The `Shield` LSL script is used by the Truth &amp; Beauty Privacy Shields, scripted land shields with easy transparency/phantom on/off. All Truth &amp; Beauty Privacy Shields in the same region with the same owner communicate with each other. For example, activating or deactivating one shield activates or deactivates them all. Shields can also be managed individually along with several other settings.
+
+Privacy Shield sizes &amp; textures as well as settings are maintained as Linkset Datastore Key/Value pairs. No notecard is required and these settings persist across resets, deletion, copying, and region transfers without using script memory.
 
 ## Table of Contents
 
 - [Deploy](#deploy)
+- [Manage with Dialog Menu](#manage-with-dialog-menu)
 - [Manage with Gestures](#manage-with-gestures)
   - [Customize the Gestures](#customize-the-gestures)
-- [Manage with Dialog Menu](#manage-with-dialog-menu)
 - [Manual Resizing](#manual-resizing)
 - [Updates](#updates)
 - [Support](#support)
@@ -17,6 +19,30 @@ The `Shield` LSL script is used by the Truth &amp; Beauty Privacy Shields, scrip
 Rez a Truth &amp; Beauty Privacy Shield and position it where you want.
 
 Rez as many shields as you need, they can all be controlled using the gestures described below, a dialog menu, or via local chat commands.
+
+## Manage with Dialog Menu
+
+The Truth &amp; Beauty Privacy Shields can be managed using a dialog menu. To bring up the menu, long press the shield.
+
+The dialog menu provides a status indicator for all Truth &amp; Beauty Privacy Shields in the region and can be used to:
+
+- Raise / Lower Shields
+- Set to 1-sided shield (default) or 2-sided shield
+- Apply changes to a single shield or all shields in the region owned by the same owner
+- Enable/Disable Flashing when shields are activated
+- Enable/Disable Touch to activate/deactivate shields
+- Set shields to phantom or solid when active
+- Resize shields to standard formats
+- Retexture each shield with textures in the Shield inventory
+  - New textures can be added, simply drag and drop into the shield Contents tab
+  - Best if new textures are in 2:1 aspect ration, width twice the height
+  - Keep texture names short, less than 11 characters, e.g. `MyFavorite`
+- Set each shield to access by owner only or members of the shield's group
+  - If group access is enabled, group members can manage shields via the dialog menu only
+  - Owner can always manage via dialog menu or chat commands and gestures
+  - Group members cannot enable or disable group access, only owner can
+
+The Truth &amp; Beauty Privacy Shields store settings in prim K/V storage. No editing notecards, all preferences and settings are automatically saved in the prim K/V store.
 
 ## Manage with Gestures
 
@@ -52,30 +78,6 @@ The Truth &amp; Beauty Privacy Shields gestures are copy/modify so you can edit 
 - Modify the `Trigger:` entry to your custom trigger
   - DO NOT modify the `Replace with:` entry
 - Click the `Save` button and close the gesture window
-
-## Manage with Dialog Menu
-
-The Truth &amp; Beauty Privacy Shields can be managed using a dialog menu. To bring up the menu, long press the shield.
-
-The dialog menu provides a status indicator for all Truth &amp; Beauty Privacy Shields in the region and can be used to:
-
-- Raise / Lower Shields
-- Set to 1-sided shield (default) or 2-sided shield
-- Enable/Disable Flashing when shields are activated
-- Enable/Disable Touch to activate/deactivate shields
-- Set shields to phantom or solid when active
-- Resize shields to standard formats
-- Retexture each shield with textures in the Shield inventory
-  - New textures can be added, simply drag and drop into the shield Contents tab
-  - Best if new textures are in 2:1 aspect ration, width twice the height
-  - Keep texture names short, less than 11 characters, e.g. `MyFavorite`
-- Apply changes to a single shield or all shields in the region owned by the same owner
-- Set each shield to access by owner only or members of the shield's group
-  - If group access is enabled, group members can manage shields via the dialog menu only
-  - Owner can always manage via dialog menu or chat commands and gestures
-  - Group members cannot enable or disable group access, only owner can
-
-The Truth &amp; Beauty Privacy Shields store settings in prim K/V storage. No editing notecards, all preferences and settings are automatically saved in the prim K/V store.
 
 ## Manual Resizing
 
