@@ -74,6 +74,8 @@ string  linksetValue;
 
 // Linkset Data Keys
 //
+// All or Solo linkset data key
+string  SOLO_LSD_KEY      = "solo";
 // Prim Size linkset data key
 string  SIZE_LSD_KEY      = "size";
 // Original Prim Size linkset data key
@@ -217,6 +219,7 @@ sidedShield() {
             llOwnerSay(msg);
         }
     }
+    linksetDataWrite(NULL_KEY, DOUBLE_LSD_KEY, (string)DOUBLE, "Double/Single Sided");
     llSetTimerEvent(5.0);
 }
 
@@ -445,6 +448,11 @@ GetDatastoreValues() {
     //
     // Retrieve any configuration values stored in the linkset datastore
     //
+    // All or Solo linkset data key
+    linksetValue = llLinksetDataRead(SOLO_LSD_KEY);
+    if (linksetValue != "") {
+        ALL = (integer)linksetValue;
+    }
     // Prim Size linkset data key
     linksetValue = llLinksetDataRead(SIZE_LSD_KEY);
     if (linksetValue != "") {
@@ -502,6 +510,8 @@ SetDatastoreValues(key id) {
     // Set all configuration values stored in the linkset datastore
     // Called from on_rez and when Save button is clicked
     //
+    // All or Solo linkset data key
+    linksetDataWrite(id, SOLO_LSD_KEY, (string)ALL, "All or Solo Shield");
     // Prim Size linkset data key
     linksetDataWrite(id, SIZE_LSD_KEY, (string)prim_size, "Shield Size");
     //  Prim Position linkset data key
@@ -525,9 +535,13 @@ integer linksetDataWrite(key id, string lsdKey, string value, string cfg) {
     string val = llStringTrim(value, STRING_TRIM);
     integer returnCode = llLinksetDataWrite(lsdKey, val);
     if (returnCode == LINKSETDATA_OK) {
-        llRegionSayTo(id, 0, "[Privacy Shield] " + cfg + " saved.");
+        if (id) {
+            llRegionSayTo(id, 0, "[Privacy Shield] " + cfg + " saved.");
+        }
     } else if (returnCode != LINKSETDATA_NOUPDATE) {
-        llRegionSayTo(id, 0, "[Privacy Shield] " + cfg + " save failed (code " + (string)returnCode + ").");
+        if (id) {
+            llRegionSayTo(id, 0, "[Privacy Shield] " + cfg + " save failed (code " + (string)returnCode + ").");
+        }
     }
     return returnCode;
 }
@@ -627,8 +641,10 @@ default {
                 sidedShield();
             } else if (cmd == "group") {
                 GROUP = TRUE;
+                linksetDataWrite(NULL_KEY, GROUP_LSD_KEY, (string)GROUP, "Group Access");
             } else if (cmd == "owner") {
                 GROUP = FALSE;
+                linksetDataWrite(NULL_KEY, GROUP_LSD_KEY, (string)GROUP, "Group Access");
             } else if (cmd == "flash off") {
                 FLASH = FALSE;
             } else if (cmd == "flash on") {
@@ -758,6 +774,13 @@ default {
         origt = texts;
         // Original Prim Textures linkset data key
         linksetDataWrite(owner, ORIGTEXT_LSD_KEY, llList2CSV(origt), "Original Shield Textures");
+
+        linksetValue = llLinksetDataRead(SOLO_LSD_KEY);
+        if (linksetValue != "") {
+            ALL = (integer)linksetValue;
+        } else {
+            ALL = TRUE;
+        }
         linksetValue = llLinksetDataRead(GROUP_LSD_KEY);
         if (linksetValue != "") {
             GROUP = (integer)linksetValue;
@@ -840,8 +863,10 @@ state cloaked {
                 sidedShield();
             } else if (cmd == "group") {
                 GROUP = TRUE;
+                linksetDataWrite(NULL_KEY, GROUP_LSD_KEY, (string)GROUP, "Group Access");
             } else if (cmd == "owner") {
                 GROUP = FALSE;
+                linksetDataWrite(NULL_KEY, GROUP_LSD_KEY, (string)GROUP, "Group Access");
             } else if (cmd == "flash off") {
                 FLASH = FALSE;
             } else if (cmd == "flash on") {
@@ -982,8 +1007,10 @@ state menu
             sidedShield();
         } else if (message == "ALL") {
             ALL = TRUE;
+            linksetDataWrite(tcher, SOLO_LSD_KEY, (string)ALL, "All or Solo Shield");
         } else if (message == "SOLO") {
             ALL = FALSE;
+            linksetDataWrite(tcher, SOLO_LSD_KEY, (string)ALL, "All or Solo Shield");
         } else if (message == "SIZE") {
             state size;
         } else if (message == "TEXTURE") {
@@ -995,6 +1022,7 @@ state menu
                     llRegionSay(objChannel, "Group");
                 }
                 GROUP = TRUE;
+                linksetDataWrite(NULL_KEY, GROUP_LSD_KEY, (string)GROUP, "Group Access");
             } else {
                 if (id) llRegionSayTo(id, 0, "Only the owner can set the shields to group access");
             }
@@ -1005,6 +1033,7 @@ state menu
                     llRegionSay(objChannel, "Owner");
                 }
                 GROUP = FALSE;
+                linksetDataWrite(NULL_KEY, GROUP_LSD_KEY, (string)GROUP, "Group Access");
             } else {
                 if (id) llRegionSayTo(id, 0, "Only the owner can set the shields to owner only");
             }
