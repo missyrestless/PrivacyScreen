@@ -3,7 +3,7 @@
 - Todo
 * Done
 
-- Store settings in prim K/V storage
+* Store settings in prim K/V storage
   - Can prims share a K/V storage?
 - Auto detect parcel border &amp; position?
 
