@@ -29,7 +29,7 @@
 //                                                //
 ////////////////////////////////////////////////////
 
-string  VERSION = "1.1.2";
+string  VERSION = "1.1.3";
 
 integer ALL     = TRUE;      // Set to TRUE to effect all shields, FALSE for single shield
 integer DOUBLE  = FALSE;     // Set to TRUE for double sided shield, FALSE for single sided

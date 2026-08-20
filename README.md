@@ -12,6 +12,7 @@ Privacy Shield sizes &amp; textures as well as settings are maintained as Linkse
   - [Customize the Gestures](#customize-the-gestures)
 - [Manual Resizing](#manual-resizing)
 - [Updates](#updates)
+- [License](#license)
 - [Support](#support)
 
 ## Deploy
@@ -19,6 +20,10 @@ Privacy Shield sizes &amp; textures as well as settings are maintained as Linkse
 Rez a Truth &amp; Beauty Privacy Shield and position it where you want.
 
 Rez as many shields as you need, they can all be controlled using the gestures described below, a dialog menu, or via local chat commands.
+
+Truth &amp; Beauty Privacy Shields are provided as either a rectangular screen or tube shape. The rectangular screens also have a mirrored version to allow easy chaining of shields.
+
+The Truth &amp; Beauty Privacy Shields include a variety of pleasant textures with which the shields can be configured. After rezzing, the default texture(s) can be replaced with those of your choosing using the main dialog menu `TEXTURE` button. Custom textures can be added by simply dragging and dropping a texture from your inventory into the Shield's Contents tab of the Edit window.
 
 ## Manage with Dialog Menu
 
@@ -81,7 +86,11 @@ The Truth &amp; Beauty Privacy Shields gestures are copy/modify so you can edit 
 
 ## Manual Resizing
 
-The Truth &amp; Beauty Privacy Shields are Modify/Copy and can be resized to fit your needs. To resize a shield:
+The Truth &amp; Beauty Privacy Shields are Modify/Copy and can be resized to fit your needs.
+
+Shields can be resized to standard formats using the main dialog menu `SIZE` button.
+
+To manually resize a shield:
 
 - Right click the shield and select `Edit`
 - Click the `Object` tab in the edit window
@@ -108,6 +117,19 @@ To update a Truth &amp; Beauty Privacy Shield:
   - Delete the `Shield` script
   - Drag and Drop the newly downloaded `Shield` script into the Contents tab
 - Close the Edit window
+
+## License
+
+The Truth &amp; Beauty Privacy Shield is distributed under the terms and conditions of the GNU General Public License (GPL). The GPL is a copyleft license, which means that it guarantees end users the freedom to run, study, share, or modify the software, but if you distribute a derivative work or modification, you must provide the source code to those recipients under the same or equivalent license terms — there is no requirement to publish anything to the public at large.
+
+The full terms and conditions of the GPL are provided with the Truth &amp; Beauty Privacy Shield and can be found at https://www.gnu.org/licenses/gpl-3.0.html
+
+The key conditions of the GPL, in simple English, include the following:
+
+- You can run the program for any use
+- You can see how the program works and change it
+- You can share copies with others
+- You can share your changed versions under the same rules
 
 ## Support
 
