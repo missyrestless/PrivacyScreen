@@ -24,10 +24,12 @@
 // 2026-Aug-13 Add timers to lock state changes   //
 // 2026-Aug-16 Add dialog menu management         //
 // 2026-Aug-17 Add texture menu management        //
+// 2026-Aug-18 Support for one and two sided      //
+// 2026-Aug-19 Use linkset datastore for config   //
 //                                                //
 ////////////////////////////////////////////////////
 
-string  VERSION = "1.1.1";
+string  VERSION = "1.1.2";
 
 integer ALL     = TRUE;      // Set to TRUE to effect all shields, FALSE for single shield
 integer DOUBLE  = FALSE;     // Set to TRUE for double sided shield, FALSE for single sided
@@ -40,7 +42,7 @@ integer objListenID;         // Not yet used
 integer dialogHandle;        // Dialog Menu listener handle, channel, boolean
 integer listenHandle;
 integer dialogChannel;
-integer pageNumber    = 1;
+integer pageNumber    = 1;   // Dialog Menu page number
 integer defaultState  = TRUE;
 integer selected_face = -1;
 integer side_one      = 0;   // Face number for front of shield
@@ -58,10 +60,42 @@ key     owner = NULL_KEY;
 key     tcher = NULL_KEY;
 list    faces = [];          // Faces with screen texture, all other faces will be transparent
 list    texts = [];          // Face & Texture of faces with screen texture, for use as strided list
+list    origt = [];          // Original Textures of faces, used by menu restore
 float   cloakSpeed =  0.1;
 float   def_size_x = -1.0;
 float   def_size_y = -1.0;
-vector  prim_size;
+vector  orig_size  = ZERO_VECTOR;
+vector  prim_size  = ZERO_VECTOR;
+vector  position;
+string  BLANK      = "5b53359e-59dd-d8a2-04c3-9e65134da47a";
+string  front_texture;
+string  back_texture;
+string  linksetValue;
+
+// Linkset Data Keys
+//
+// All or Solo linkset data key
+string  SOLO_LSD_KEY      = "solo";
+// Prim Size linkset data key
+string  SIZE_LSD_KEY      = "size";
+// Original Prim Size linkset data key
+string  ORIGSIZE_LSD_KEY  = "original_size";
+//  Prim Position linkset data key
+string  POSITION_LSD_KEY  = "position";
+// Original Prim Textures linkset data key
+string  ORIGTEXT_LSD_KEY  = "original_textures";
+// Prim Textures linkset data key
+string  TEXTURES_LSD_KEY  = "textures";
+// Group access linkset data key
+string  GROUP_LSD_KEY     = "group";
+// Double/Single sided linkset data key
+string  DOUBLE_LSD_KEY    = "double_sided";
+// Front face texture linkset data key
+string  ZERO_LSD_KEY      = "front_texture";
+// Back face texture linkset data key
+string  FIVE_LSD_KEY      = "back_texture";
+// Opaque/Transparent linkset data key
+string  STATUS_LSD_KEY    = "status";
 
 setFacesAlpha(float trans) {
     integer i;
@@ -74,7 +108,6 @@ setFacesAlpha(float trans) {
 set_faces() {
     string currentTex;
     string DEFAULT_PLYWOOD     = "89556747-24cb-43ed-920b-47caed15465f";
-    string BLANK               = "5b53359e-59dd-d8a2-04c3-9e65134da47a";
     string TTRANSPARENT        = "8dcd4a48-2d37-4909-9f78-f7a9eb4ef903";
     string WHITE_TEXTURE       = "5748decc-f629-461c-9a36-a35a221fe21f";
 
@@ -161,7 +194,6 @@ sidedShield() {
     string prefix = "Truth & Beauty Privacy Shield version " + VERSION;
     string slurl = getShieldSlurl();
     string location = " at " + slurl;
-    string blank = "5b53359e-59dd-d8a2-04c3-9e65134da47a";
     string msg;
 
     if (DOUBLE) {
@@ -171,7 +203,7 @@ sidedShield() {
         }
         msg = prefix + location + " is set to DOUBLE SIDED";
     } else {
-        llSetTexture(blank, side_two);
+        llSetTexture(BLANK, side_two);
         llSetAlpha(0.0, side_two);
         msg = prefix + location + " is set to SINGLE SIDED";
     }
@@ -187,6 +219,7 @@ sidedShield() {
             llOwnerSay(msg);
         }
     }
+    linksetDataWrite(NULL_KEY, DOUBLE_LSD_KEY, (string)DOUBLE, "Double/Single Sided");
     llSetTimerEvent(5.0);
 }
 
@@ -335,7 +368,7 @@ displaySizeMenu() {
 
 displayTextMenu() {
     integer total = llGetListLength(faces);
-    list face_menu = ["BACK", "RESTORE", "EXIT"];
+    list face_menu = [];
     list text_menu = [];
     string menuMessage;
 
@@ -358,17 +391,14 @@ displayTextMenu() {
     text_menu = get_Textures();
     if (text_menu) {
         menuMessage += "\nTexture THIS SHIELD ONLY\n";
-        if (selected_face != -1) {
-            menuMessage += "\nCurrent texture: " + llGetTexture(selected_face) + "\n";
-        }
-        if (total > 1) {
+        if (selected_face == -1) {
             menuMessage += "\nSelect a face to retexture\n";
-            menuMessage += "\nThen select the texture to use on that face\n";
         } else {
-            menuMessage += "\nSelect the texture to use on this face\n";
+            menuMessage += "\nCurrent texture: " + llGetTexture(selected_face) + "\n";
+            menuMessage += "\nSelect the texture to use on face " + (string)selected_face + "\n";
+            face_menu = ["BACK", "RESTORE", "EXIT"];
+            face_menu += text_menu;
         }
-
-        face_menu += text_menu;
         face_menu += ["BACK", "RESTORE", "EXIT"];
     } else {
         menuMessage += "\nNO TEXTURES FOUND\n";
@@ -414,41 +444,141 @@ ShowMenu(string msg, list fm) {
     llSetTimerEvent(60);   // If no response in time, return to previous state
 }
 
-// TODO: Add support for storing settings in prim K/V linkset datastore
+GetDatastoreValues() {
+    //
+    // Retrieve any configuration values stored in the linkset datastore
+    //
+    // All or Solo linkset data key
+    linksetValue = llLinksetDataRead(SOLO_LSD_KEY);
+    if (linksetValue != "") {
+        ALL = (integer)linksetValue;
+    }
+    // Prim Size linkset data key
+    linksetValue = llLinksetDataRead(SIZE_LSD_KEY);
+    if (linksetValue != "") {
+        prim_size = (vector)linksetValue;
+    }
+    // Original Prim Size linkset data key
+    linksetValue = llLinksetDataRead(ORIGSIZE_LSD_KEY);
+    if (linksetValue != "") {
+        orig_size = (vector)linksetValue;
+    }
+    //  Prim Position linkset data key
+    linksetValue = llLinksetDataRead(POSITION_LSD_KEY);
+    if (linksetValue != "") {
+        position = (vector)linksetValue;
+    }
+    // Original Prim Textures linkset data key
+    linksetValue = llLinksetDataRead(ORIGTEXT_LSD_KEY);
+    if (linksetValue != "") {
+        origt = llCSV2List(linksetValue);
+    }
+    // Prim Textures linkset data key
+    linksetValue = llLinksetDataRead(TEXTURES_LSD_KEY);
+    if (linksetValue != "") {
+        texts = llCSV2List(linksetValue);
+    }
+    // Group access linkset data key
+    linksetValue = llLinksetDataRead(GROUP_LSD_KEY);
+    if (linksetValue != "") {
+        GROUP = (integer)linksetValue;
+    }
+    // Double/Single sided linkset data key
+    linksetValue = llLinksetDataRead(DOUBLE_LSD_KEY);
+    if (linksetValue != "") {
+        DOUBLE = (integer)linksetValue;
+    }
+    // Front texture (Face 0)
+    linksetValue = llLinksetDataRead(ZERO_LSD_KEY);
+    if ((linksetValue != "") && (llGetInventoryType(linksetValue) == INVENTORY_TEXTURE)) {
+        front_texture = linksetValue;
+    }
+    // Back texture (Face 5)
+    linksetValue = llLinksetDataRead(FIVE_LSD_KEY);
+    if ((linksetValue != "") && (llGetInventoryType(linksetValue) == INVENTORY_TEXTURE)) {
+        back_texture = linksetValue;
+    }
+    // Transparency
+    linksetValue = llLinksetDataRead(STATUS_LSD_KEY);
+    if (linksetValue != "") {
+        shieldStatus = (integer)linksetValue;
+    }
+}
+
+SetDatastoreValues(key id) {
+    //
+    // Set all configuration values stored in the linkset datastore
+    // Called from on_rez and when Save button is clicked
+    //
+    // All or Solo linkset data key
+    linksetDataWrite(id, SOLO_LSD_KEY, (string)ALL, "All or Solo Shield");
+    // Prim Size linkset data key
+    linksetDataWrite(id, SIZE_LSD_KEY, (string)prim_size, "Shield Size");
+    //  Prim Position linkset data key
+    linksetDataWrite(id, POSITION_LSD_KEY, (string)position, "Shield Position");
+    // Prim Textures linkset data key
+    linksetDataWrite(id, TEXTURES_LSD_KEY, llList2CSV(texts), "Shield Textures");
+    // Group access linkset data key
+    linksetDataWrite(id, GROUP_LSD_KEY, (string)GROUP, "Group Access");
+    // Double/Single sided linkset data key
+    linksetDataWrite(id, DOUBLE_LSD_KEY, (string)DOUBLE, "Double/Single Sided");
+    // Front texture (Face 0)
+    linksetDataWrite(id, ZERO_LSD_KEY, (string)front_texture, "Front Side Texture");
+    // Back texture (Face 5)
+    linksetDataWrite(id, FIVE_LSD_KEY, (string)back_texture, "Back Side Texture");
+    // Transparency
+    linksetDataWrite(id, STATUS_LSD_KEY, (string)shieldStatus, "Shield Status");
+}
+
 // Writes the provided key/value pair to the prim's linkset datastore
-//
-// integer linksetDataWrite(key id, string lsdKey, string value, integer link, string cfg) {
-//     string val = llStringTrim(value, STRING_TRIM);
-//     integer returnCode = llLinksetDataWrite(lsdKey, val);
-//     if (returnCode == LINKSETDATA_OK) {
-//         llMessageLinked(LINK_THIS, link, val, "");
-//         llRegionSayTo(id, 0, "[Privacy Shield] " + cfg + " saved.");
-//     } else if (returnCode == LINKSETDATA_NOUPDATE) {
-//         llMessageLinked(LINK_THIS, link, val, "");
-//         llRegionSayTo(id, 0, "[Privacy Shield] " + cfg + " already stored and is identical.");
-//     } else {
-//         llRegionSayTo(id, 0, "[Privacy Shield] " + cfg + " save failed (code " + (string)returnCode + ").");
-//     }
-//     return returnCode;
-// }
+integer linksetDataWrite(key id, string lsdKey, string value, string cfg) {
+    string val = llStringTrim(value, STRING_TRIM);
+    integer returnCode = llLinksetDataWrite(lsdKey, val);
+    if (returnCode == LINKSETDATA_OK) {
+        if (id) {
+            llRegionSayTo(id, 0, "[Privacy Shield] " + cfg + " saved.");
+        }
+    } else if (returnCode != LINKSETDATA_NOUPDATE) {
+        if (id) {
+            llRegionSayTo(id, 0, "[Privacy Shield] " + cfg + " save failed (code " + (string)returnCode + ").");
+        }
+    }
+    return returnCode;
+}
 
 default {
     state_entry() {
         owner        = llGetOwner();
         tcher        = NULL_KEY;
         defaultState = TRUE;
+        GetDatastoreValues();
         if (llGetAlpha(ALL_SIDES) > 0.0) {
             shieldStatus = TRUE;
         } else {
             shieldStatus = FALSE;
         }
         // Set default prim size if not yet set
-        if ((def_size_x == -1.0) || (def_size_y == -1.0)) {
+        if (prim_size != ZERO_VECTOR) {
             prim_size = llGetScale();
+        }
+        if ((def_size_x == -1.0) || (def_size_y == -1.0)) {
             def_size_x = prim_size.x;
             def_size_y = prim_size.y;
         }
+        // If the original size list did not get initialized in on_rez()
+        if (orig_size != ZERO_VECTOR) {
+            orig_size = llGetScale();
+            // Original Prim Size linkset data key
+            linksetDataWrite(owner, ORIGSIZE_LSD_KEY, (string)orig_size, "Original Shield Size");
+        }
+
         set_faces();
+        // If the original textures list did not get initialized in on_rez()
+        if (!llGetListLength(origt)) {
+            origt = texts;
+            // Original Prim Textures linkset data key
+            linksetDataWrite(owner, ORIGTEXT_LSD_KEY, llList2CSV(origt), "Original Shield Textures");
+        }
         // Compute a large negative channel number based on the object owner
         // All screens owned by the same owner will use the same channel
         objChannel = 0x80000000 | (integer) ( "0x" + (string) owner );
@@ -511,8 +641,10 @@ default {
                 sidedShield();
             } else if (cmd == "group") {
                 GROUP = TRUE;
+                linksetDataWrite(NULL_KEY, GROUP_LSD_KEY, (string)GROUP, "Group Access");
             } else if (cmd == "owner") {
                 GROUP = FALSE;
+                linksetDataWrite(NULL_KEY, GROUP_LSD_KEY, (string)GROUP, "Group Access");
             } else if (cmd == "flash off") {
                 FLASH = FALSE;
             } else if (cmd == "flash on") {
@@ -527,6 +659,11 @@ default {
                 TOUCH = TRUE;
             }
         }
+    }
+
+    moving_end() {
+        position = llGetPos();
+        linksetDataWrite(owner, POSITION_LSD_KEY, (string)position, "Shield Position");
     }
 
     timer() {
@@ -608,6 +745,7 @@ default {
 
     on_rez(integer num) {
         llResetScript();
+        owner = llGetOwner();
         raiseShield();
         string slurl = getShieldSlurl();
         llOwnerSay("The Truth & Beauty Privacy Shield located at " + slurl + " is now active.");
@@ -619,9 +757,45 @@ default {
         llOwnerSay("    https://github.com/missyrestless/PrivacyShield/releases");
         llOwnerSay("The latest Truth & Beauty Privacy Shield documentation can be found at:");
         llOwnerSay("    https://github.com/missyrestless/PrivacyShield#readme");
+
         prim_size = llGetScale();
         def_size_x = prim_size.x;
         def_size_y = prim_size.y;
+        linksetDataWrite(owner, ORIGSIZE_LSD_KEY, (string)prim_size, "Original Shield Size");
+
+        linksetValue = llLinksetDataRead(POSITION_LSD_KEY);
+        if (linksetValue != "") {
+            position = (vector)linksetValue;
+            llSetRegionPos(position);
+        } else {
+            position = llGetPos();
+        }
+        set_faces();
+        origt = texts;
+        // Original Prim Textures linkset data key
+        linksetDataWrite(owner, ORIGTEXT_LSD_KEY, llList2CSV(origt), "Original Shield Textures");
+
+        linksetValue = llLinksetDataRead(SOLO_LSD_KEY);
+        if (linksetValue != "") {
+            ALL = (integer)linksetValue;
+        } else {
+            ALL = TRUE;
+        }
+        linksetValue = llLinksetDataRead(GROUP_LSD_KEY);
+        if (linksetValue != "") {
+            GROUP = (integer)linksetValue;
+        } else {
+            GROUP = FALSE;
+        }
+        linksetValue = llLinksetDataRead(DOUBLE_LSD_KEY);
+        if (linksetValue != "") {
+            DOUBLE = (integer)linksetValue;
+        } else {
+            DOUBLE = FALSE;
+        }
+        front_texture = llGetTexture(side_one);
+        back_texture = llGetTexture(side_two);
+        SetDatastoreValues(owner);
     }
 
     changed(integer change) {
@@ -635,7 +809,6 @@ state cloaked {
     state_entry() {
         defaultState = FALSE;
         tcher = NULL_KEY;
-        // TODO: Filter listen for group members
         listenerID = llListen(listenChannel, "", owner, "");
         objListenID = llListen(objChannel, "", NULL_KEY, "");
     }
@@ -690,8 +863,10 @@ state cloaked {
                 sidedShield();
             } else if (cmd == "group") {
                 GROUP = TRUE;
+                linksetDataWrite(NULL_KEY, GROUP_LSD_KEY, (string)GROUP, "Group Access");
             } else if (cmd == "owner") {
                 GROUP = FALSE;
+                linksetDataWrite(NULL_KEY, GROUP_LSD_KEY, (string)GROUP, "Group Access");
             } else if (cmd == "flash off") {
                 FLASH = FALSE;
             } else if (cmd == "flash on") {
@@ -832,8 +1007,10 @@ state menu
             sidedShield();
         } else if (message == "ALL") {
             ALL = TRUE;
+            linksetDataWrite(tcher, SOLO_LSD_KEY, (string)ALL, "All or Solo Shield");
         } else if (message == "SOLO") {
             ALL = FALSE;
+            linksetDataWrite(tcher, SOLO_LSD_KEY, (string)ALL, "All or Solo Shield");
         } else if (message == "SIZE") {
             state size;
         } else if (message == "TEXTURE") {
@@ -845,6 +1022,7 @@ state menu
                     llRegionSay(objChannel, "Group");
                 }
                 GROUP = TRUE;
+                linksetDataWrite(NULL_KEY, GROUP_LSD_KEY, (string)GROUP, "Group Access");
             } else {
                 if (id) llRegionSayTo(id, 0, "Only the owner can set the shields to group access");
             }
@@ -855,6 +1033,7 @@ state menu
                     llRegionSay(objChannel, "Owner");
                 }
                 GROUP = FALSE;
+                linksetDataWrite(NULL_KEY, GROUP_LSD_KEY, (string)GROUP, "Group Access");
             } else {
                 if (id) llRegionSayTo(id, 0, "Only the owner can set the shields to owner only");
             }
@@ -918,6 +1097,7 @@ state menu
     }
 
     state_exit() {
+        SetDatastoreValues(tcher);
         llSetTimerEvent(0);
     }
 }
@@ -949,8 +1129,15 @@ state size
             prim_size.x = 64.0;
             prim_size.y = 32.0;
         } else if (message == "RESTORE") {
-            prim_size.x = def_size_x;
-            prim_size.y = def_size_y;
+            linksetValue = llLinksetDataRead(ORIGSIZE_LSD_KEY);
+            if (linksetValue != "") {
+                orig_size = (vector)linksetValue;
+                prim_size = orig_size;
+            } else {
+                prim_size.x = def_size_x;
+                prim_size.y = def_size_y;
+                linksetDataWrite(owner, ORIGSIZE_LSD_KEY, (string)prim_size, "Original Shield Size");
+            }
         } else if (message == "BACK") {
             state menu;
         } else if (message == "EXIT") {
@@ -976,6 +1163,7 @@ state size
     }
 
     state_exit() {
+        SetDatastoreValues(tcher);
         llSetTimerEvent(0);
     }
 }
@@ -992,11 +1180,22 @@ state text
             // Face #
             selected_face = (integer)(llGetSubString(message, 5, -1));
         } else if (message == "RESTORE") {
-            integer len = llGetListLength(texts);
+            linksetValue = llLinksetDataRead(ORIGTEXT_LSD_KEY);
+            if (linksetValue != "") {
+                origt = llCSV2List(linksetValue);
+                texts = origt;
+            } else {
+                linksetDataWrite(owner, ORIGTEXT_LSD_KEY, llList2CSV(texts), "Original Shield Textures");
+                origt = texts;
+            }
+            integer len = llGetListLength(origt);
+            if (len == 0) {
+                origt = texts;
+                len = llGetListLength(origt);
+            }
             integer i = 0;
             while (i < len) {
-                // current
-                llSetTexture(llList2String(texts, i + 1), llList2Integer(texts, i));
+                llSetTexture(llList2String(origt, i + 1), llList2Integer(origt, i));
                 i += 2; // Jump to the next stride
             }
         } else if (message == "BACK") {
@@ -1039,6 +1238,9 @@ state text
     }
 
     state_exit() {
+        front_texture = llGetTexture(side_one);
+        back_texture = llGetTexture(side_two);
+        SetDatastoreValues(tcher);
         llSetTimerEvent(0);
     }
 }
@@ -1066,4 +1268,3 @@ state warn
         state text;
     }
 }
-
