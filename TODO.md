@@ -3,9 +3,12 @@
 - Todo
 * Done
 
-* Store settings in prim K/V storage
-  - Can prims share a K/V storage?
-- Auto detect parcel border &amp; position?
+- Move settings to separate menu
+  - Add Horizontal/Vertical flip to settings menu
+- Add Transparent to textures menu
+- Highlight selected face
+- Position menu
+  - Auto detect parcel border &amp; position?
 
 * Add dialog menu
   * Long press to open dialog
@@ -22,3 +25,4 @@
 * Initial setup in default state entry
 * Add support for multiple textures &amp; selection with dialog menu
 * Add single sided and double sided to dialog menu
+* Store settings in prim K/V storage

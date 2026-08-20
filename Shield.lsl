@@ -246,6 +246,24 @@ stateShield() {
     llSetTimerEvent(5.0);
 }
 
+string getPrimType() {
+    // Query the primitive parameters for the prim type
+    list primParams = llGetPrimitiveParams([PRIM_TYPE]);
+    // The first element in the returned list is always the type flag
+    integer primType = llList2Integer(primParams, 0);
+        
+    // Identify the shape type
+    if (primType == PRIM_TYPE_BOX)             return "Box";
+    else if (primType == PRIM_TYPE_CYLINDER)   return "Cylinder";
+    else if (primType == PRIM_TYPE_PRISM)      return "Prism";
+    else if (primType == PRIM_TYPE_SPHERE)     return "Sphere";
+    else if (primType == PRIM_TYPE_TORUS)      return "Torus";
+    else if (primType == PRIM_TYPE_TUBE)       return "Tube";
+    else if (primType == PRIM_TYPE_RING)       return "Ring";
+    else if (primType == PRIM_TYPE_SCULPT)     return "Sculpt";
+    else                                       return "Unknown";
+}
+
 list get_Textures() {
     list texture_list = [];
     integer count = llGetInventoryNumber(INVENTORY_TEXTURE);
@@ -551,6 +569,16 @@ default {
         owner        = llGetOwner();
         tcher        = NULL_KEY;
         defaultState = TRUE;
+
+        // Only support Box and Tube currently
+        if (getPrimType() == "Tube") {
+            side_two = 2;
+        } else {
+            side_two = 5;
+        }
+        front_texture = llGetTexture(side_one);
+        back_texture = llGetTexture(side_two);
+
         GetDatastoreValues();
         if (llGetAlpha(ALL_SIDES) > 0.0) {
             shieldStatus = TRUE;
@@ -746,6 +774,12 @@ default {
     on_rez(integer num) {
         llResetScript();
         owner = llGetOwner();
+        // Only support Box and Tube currently
+        if (getPrimType() == "Tube") {
+            side_two = 2;
+        } else {
+            side_two = 5;
+        }
         raiseShield();
         string slurl = getShieldSlurl();
         llOwnerSay("The Truth & Beauty Privacy Shield located at " + slurl + " is now active.");
