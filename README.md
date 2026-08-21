@@ -6,8 +6,9 @@ Privacy Shield sizes &amp; textures as well as settings are maintained as Linkse
 
 ## Table of Contents
 
+- [Buy](#buy)
 - [Deploy](#deploy)
-- [Manage with Dialog Menu](#manage-with-dialog-menu)
+- [Manage with Dialog Menus](#manage-with-dialog-menus)
 - [Manage with Gestures](#manage-with-gestures)
   - [Customize the Gestures](#customize-the-gestures)
 - [Manual Resizing](#manual-resizing)
@@ -17,6 +18,10 @@ Privacy Shield sizes &amp; textures as well as settings are maintained as Linkse
   - [Other Creators](#other-creators)
 - [License](#license)
 - [Support](#support)
+
+## Buy
+
+[Purchase](https://marketplace.secondlife.com/p/Truth-Beauty-Privacy-Shield/28586403) the Truth &amp; Beauty Privacy Shield on the [Second Life Marketplace](https://marketplace.secondlife.com/p/Truth-Beauty-Privacy-Shield/28586403).
 
 ## Deploy
 
@@ -28,11 +33,20 @@ Truth &amp; Beauty Privacy Shields are provided as either a rectangular screen o
 
 The Truth &amp; Beauty Privacy Shields include a variety of pleasant textures with which the shields can be configured. After rezzing, the default texture(s) can be replaced with those of your choosing using the main dialog menu `TEXTURE` button. Custom textures can be added by simply dragging and dropping a texture from your inventory into the Shield's Contents tab of the Edit window.
 
-## Manage with Dialog Menu
+## Manage with Dialog Menus
 
-The Truth &amp; Beauty Privacy Shields can be managed using a dialog menu. To bring up the menu, long press the shield.
+The Truth &amp; Beauty Privacy Shields can be managed using dialog menus.
 
-The dialog menu provides a status indicator for all Truth &amp; Beauty Privacy Shields in the region and can be used to:
+Open the management menu by clicking on a shield, If the shield is touch enabled (clicking toggles its status) then long press the shield (click and hold the mouse button down for 2 seconds). The main menu provides buttons to raise and lower the shields, set menu actions to all shields in region or a single shield, set the shield to single or double sided, and display info on all shields in the region. Several submenus are available including menus for resizing, retexturing, and configuring the shield settings.
+
+<table>
+  <tr>
+    <td align="center"><img src="./Pics/MainMenu.png?raw=true" title="Main Menu" width="342" height="253" /></td>
+    <td align="center"><img src="./Pics/TextureMenu.png?raw=true" title="Texture Menu" width="342" height="253" /></td>
+  </tr>
+</table>
+
+These dialog menus provide a status indicator for all Truth &amp; Beauty Privacy Shields in the region and can be used to:
 
 - Raise / Lower Shields
 - Set to 1-sided shield (default) or 2-sided shield
