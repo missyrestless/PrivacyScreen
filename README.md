@@ -12,8 +12,10 @@ Privacy Shield sizes &amp; textures as well as settings are maintained as Linkse
   - [Customize the Gestures](#customize-the-gestures)
 - [Manual Resizing](#manual-resizing)
 - [Updates](#updates)
+- [Textures](#textures)
+  - [Truth and Beauty Wikimedia Commons Textures](#truth-and-beauty-wikimedia-commons-textures)
+  - [Other Creators](#other-creators)
 - [License](#license)
-  - [Textures](#textures)
 - [Support](#support)
 
 ## Deploy
@@ -119,6 +121,32 @@ To update a Truth &amp; Beauty Privacy Shield:
   - Drag and Drop the newly downloaded `Shield` script into the Contents tab
 - Close the Edit window
 
+## Textures
+
+The textures provided and used by the Truth &amp; Beauty Privacy Shields are full perm and can be copied under the restrictions set forth by their creators. Typically these restrictions include no transfer of redistribution of the standalone images, they may be freely copied and used in your product builds and sold as part of those products.
+
+The Truth &amp; Beauty Lab encourages the purchase of these high quality, low priced products from which the textures in the Privacy Shield were obtained:
+
+### Truth and Beauty Wikimedia Commons Textures
+
+- [Space](https://marketplace.secondlife.com/p/Wikimedia-Commons-Textures-Space/1609854)
+- [Nudes](https://marketplace.secondlife.com/p/Wikimedia-Commons-Textures-Nudes/1609844)
+- [Fungi](https://marketplace.secondlife.com/p/Wikimedia-Commons-Textures-Fungi/1609830)
+- [Flowers](https://marketplace.secondlife.com/p/Wikimedia-Commons-Textures-Flowers/1609819)
+- [Nature](https://marketplace.secondlife.com/p/Wikimedia-Commons-Textures-Nature/1132878)
+
+### Other Creators
+
+- [Sky stars 360 Seamless Panorama Texture](https://marketplace.secondlife.com/p/Sky-stars-360-Seamless-Panorama-Texture/26621462)
+- [Textures Underwater World with Castle](https://marketplace.secondlife.com/p/Textures-Underwater-World-with-Castle/25115051)
+- [Underwater 360 Seamless Panorama Texture](https://marketplace.secondlife.com/p/Underwater-360-Seamless-Panorama-Texture/26621490)
+- [Fantasy-starburst 360 Seamless Panorama Texture](https://marketplace.secondlife.com/p/fantasy-starburst-360-Seamless-Panorama-Texture/26621416)
+- [FaeTree Amazing Backgrounds V.6 Space](https://marketplace.secondlife.com/p/FaeTree-Amazing-Backgrounds-V6-Space/27120254)
+- [Amazing Backgrounds V3](https://marketplace.secondlife.com/p/Amazing-Backgrounds-V3/20567584)
+- [WoW 2 Underwater & Sand Textures](https://marketplace.secondlife.com/p/WoW-2-Underwater-Sand-Textures/26103618)
+- [Out To Sea Panoramics](https://marketplace.secondlife.com/p/Out-To-Sea-Panoramics/19892222)
+- [2 Underwater Textures](https://marketplace.secondlife.com/p/2-Underwater-Textures/28320813)
+
 ## License
 
 The Truth &amp; Beauty Privacy Shield is distributed under the terms and conditions of the GNU General Public License (GPL). The GPL is a copyleft license, which means that it guarantees end users the freedom to run, study, share, or modify the software, but if you distribute a derivative work or modification, you must provide the source code to those recipients under the same or equivalent license terms — there is no requirement to publish anything to the public at large.
@@ -131,22 +159,6 @@ The key conditions of the GPL, in simple English, include the following:
 - You can see how the program works and change it
 - You can share copies with others
 - You can share your changed versions under the same rules
-
-### Textures
-
-The textures provided and used by the Truth &amp; Beauty Privacy Shields are full perm and can be copied under the restrictions set forth by their creators. Typically these restrictions include no transfer of redistribution of the standalone images, they may be freely copied and used in your product builds and sold as part of those products.
-
-The Truth &amp; Beauty Lab encourages the purchase of these high quality, low priced products from which the textures in the Privacy Shield were obtained:
-
-- [Sky stars 360 Seamless Panorama Texture](https://marketplace.secondlife.com/p/Sky-stars-360-Seamless-Panorama-Texture/26621462)
-- [Textures Underwater World with Castle](https://marketplace.secondlife.com/p/Textures-Underwater-World-with-Castle/25115051)
-- [Underwater 360 Seamless Panorama Texture](https://marketplace.secondlife.com/p/Underwater-360-Seamless-Panorama-Texture/26621490)
-- [Fantasy-starburst 360 Seamless Panorama Texture](https://marketplace.secondlife.com/p/fantasy-starburst-360-Seamless-Panorama-Texture/26621416)
-- [FaeTree Amazing Backgrounds V.6 Space](https://marketplace.secondlife.com/p/FaeTree-Amazing-Backgrounds-V6-Space/27120254)
-- [Amazing Backgrounds V3](https://marketplace.secondlife.com/p/Amazing-Backgrounds-V3/20567584)
-- [WoW 2 Underwater & Sand Textures](https://marketplace.secondlife.com/p/WoW-2-Underwater-Sand-Textures/26103618)
-- [Out To Sea Panoramics](https://marketplace.secondlife.com/p/Out-To-Sea-Panoramics/19892222)
-- [2 Underwater Textures](https://marketplace.secondlife.com/p/2-Underwater-Textures/28320813)
 
 ## Support
 

@@ -72,6 +72,7 @@ string  BLANK      = "5b53359e-59dd-d8a2-04c3-9e65134da47a";
 string  front_texture;
 string  back_texture;
 string  linksetValue;
+string  shape = "Box";
 
 // Linkset Data Keys
 //
@@ -599,7 +600,8 @@ default {
         defaultState = TRUE;
 
         // Only support Box and Tube currently
-        if (getPrimType() == "Tube") {
+        shape = getPrimType();
+        if (shape == "Tube") {
             side_two = 2;
         } else {
             side_two = 5;
@@ -805,7 +807,8 @@ default {
         llResetScript();
         owner = llGetOwner();
         // Only support Box and Tube currently
-        if (getPrimType() == "Tube") {
+        shape = getPrimType();
+        if (shape == "Tube") {
             side_two = 2;
         } else {
             side_two = 5;
@@ -1274,6 +1277,13 @@ state size
             } else {
                 state cloaked;
             }
+        }
+        if (shape == "Tube") {
+            // Tube size reverses X & Y, Z is same as Y
+            prim_size.z = prim_size.y;
+            prim_size.y = prim_size.x;
+            prim_size.x = prim_size.z;
+            prim_size.z = prim_size.y;
         }
         llSetScale(prim_size);
         // Re-send the dialog to keep the menu open

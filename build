@@ -17,5 +17,5 @@ make
   mkdir -p ${DEST}
 
   cp Shield.lslo ${DEST}/Shield
-  cp COPYRIGHT LICENSE VERSION ${DEST}
+  cp COPYRIGHT LICENSE README.txt VERSION ${DEST}
 }
