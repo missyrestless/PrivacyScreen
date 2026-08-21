@@ -38,7 +38,7 @@ The Teacup webserver front end for Media on a Prim, Red Tea file service for Tea
 
 This work is licensed under a [Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/).
 
-[![CC BY 4.0](https://creativecommons.org)](https://creativecommons.org/licenses/by/4.0/)
+[![CC BY 4.0](https://mirrors.creativecommons.org/presskit/icons/cc.svg)](https://creativecommons.org/licenses/by/4.0/)
 
 ---
 
