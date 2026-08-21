@@ -3,8 +3,13 @@
 - Todo
 * Done
 
+- Improve menu message status info
+- Add Back/Restore/Exit buttons to all Texture menu pages
 - Position menu
   - Auto detect parcel border &amp; position?
+- Add option to set a face to Media on Prim TV screen
+  - Input dialog for media URL
+  - See https://wiki.secondlife.com/wiki/User:Void_Singer/Teacup
 
 * Add dialog menu
   * Long press to open dialog
