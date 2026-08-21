@@ -1,4 +1,4 @@
-/*( Teacup Server v0.5 )*/
+/*( Teacup Server v0.5.1 )*/
 
 
  /*//-- Teacup Boot Strap Variables --//*/
@@ -15,7 +15,7 @@ string  gStrTBS2a1 = "		<h3>(But the File Service may not be)</h3>\n";
  //-- URL Failure MessageL included for URL_REQUEST_DENIED
 string  gStrTBS2b1 = "		<h3>(But the region failed to provide a URL)</h3>\n";
  //-- Server Default Footer start (always loads)
-string  gStrTBS3xx = "		<hr/>\n		<p>Teacup/Saucer v0.3<br/><a href='secondlife:///app/agent/";
+string  gStrTBS3xx = "		<hr/>\n		<p>Teacup/Saucer v0.5.1<br/><a href='secondlife:///app/agent/";
  //-- Server Default Footer end & Contact Owner key insertion point (always loads)
 string  gStrTBS4xx = "/about'>Contact Owner?</a></p>\n	</body>\n</html>";
 

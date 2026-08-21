@@ -1,4 +1,4 @@
-/*  teacup.js v0.5 <!-- */
+/*  teacup.js v0.5.1 <!-- */
 
 var u0=function(){//-- faster!
 	if(window.addEventListener){

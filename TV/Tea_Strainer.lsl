@@ -1,4 +1,4 @@
-/*( Tea Strainer v0.5 )*/
+/*( Tea Strainer v0.5.1 )*/
 
 integer gIntAct; //-- pre-declaration for speed
 integer gIntCnt; //-- Allow visual tracking since last reset
