@@ -1,23 +1,26 @@
 # Truth &amp; Beauty Privacy Shield TV
 
-The Truth &amp; Beauty Privacy Shield TV is based on the open source implementation of Media on a Prim by Void Singer at https://wiki.secondlife.com/wiki/User:Void_Singer/Teacup#Quick_Start
+The Truth &amp; Beauty Privacy Shield TV is based on the open source implementation of Media on a Prim by Void Singer at https://wiki.secondlife.com/wiki/User:Void_Singer/Teacup
+
+This folder contains modified derivatives of `Teacup`, `Red Tea`, and associated files. These modifications provide integration and compatibility with Truth &amp; Beauty Privacy Shields.
 
 ## Privacy Shield TV Setup
 
-1. Rez a box and name it something creative, like "My website"
-1. Copy `teacup.js` into a notecard named "teacup.js", save it, and drop it in your rezzed box
+1. Rez a Truth &amp; Beauty Privacy Shield version 2.0.1 or later
+1. Copy `teacup.js` into a notecard named `teacup.js`, save it, and drop it in your rezzed shield
     - You May want to Edit this file to your liking first... You can add most valid javascript functions that do not rely on body onload behavior.
-1. Copy `index.tsp` into a notecard named "index.tsp", save it, and drop it in your rezzed box
+1. Copy `index.tsp` into a notecard named `index.tsp`, save it, and drop it in your rezzed shield
     - You May want to Edit this file to your liking first... You can use any html that is valid inside of a body tag.
-1. Copy `page1.tsp` into a notecard named "page1.tsp", save it, and drop it in your rezzed box
+1. Copy `page1.tsp` into a notecard named `page1.tsp`, save it, and drop it in your rezzed shield
     - You May want to Edit this file to your liking first... You can use any html that is valid inside of a body tag.
-1. Copy `Red_Tea_v0.5.lsl` into a script named "Red Tea v0.5", save it, and drop it in your rezzed box
-1. Copy `Region_Stats.lsl` into a script named "Region Stats", save it, and drop it into your rezzed box.
-1. Optional: Copy `Saucer.lsl` into a script named "Saucer", save it, and drop it in your rezzed box.
-1. Optional: Copy `Tea_Strainer.lsl` into a script named "Tea_Strainer", save it, and drop it in your rezzed box.
-1. Copy `Teacup_v0.5.lsl` into a script named "Teacup v0.5", save it, and drop it in your rezzed box.
-1. Click on the top of your box if your webpage isn't already showing.
-    - At this point you may want to rotate and/or resize your box.
+1. Copy `Red_Tea.lsl` into a script named `Red Tea`, save it, and drop it in your rezzed shield
+1. Copy `Region_Stats.lsl` into a script named `Region Stats`, save it, and drop it into your rezzed shield.
+1. Optional: Copy `Saucer.lsl` into a script named `Saucer`, save it, and drop it in your rezzed shield.
+1. Optional: Copy `Tea_Strainer.lsl` into a script named `Tea Strainer`, save it, and drop it in your rezzed shield.
+1. Copy `Teacup.lsl` into a script named `Teacup`, save it, and drop it in your rezzed shield.
+1. Click on the top of your shield if your webpage isn't already showing.
+    - TODO: provide Privacy Shield menu management instructions here
+    - At this point you may want to rotate and/or resize your shield.
     - If you like, you have my express permission to download (right click, "save as") and edit (with whichever image editor you prefer) the `Teacup.png` file to use as the default texture of your website prim.
 1. Show it off to your friends with Media on a Prim enabled viewers.
 

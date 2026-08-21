@@ -17,6 +17,7 @@ Privacy Shield sizes &amp; textures as well as settings are maintained as Linkse
   - [Truth and Beauty Wikimedia Commons Textures](#truth-and-beauty-wikimedia-commons-textures)
   - [Other Creators](#other-creators)
 - [License](#license)
+- [Development](#development)
 - [Support](#support)
 
 ## Buy
@@ -173,6 +174,12 @@ The key conditions of the GPL, in simple English, include the following:
 - You can see how the program works and change it
 - You can share copies with others
 - You can share your changed versions under the same rules
+
+## Development
+
+Planned development includes integration and compatibility with the `Teacup` open source Media on a Prim service. This will enable Truth & Beauty Privacy Shields to be configured as a shield on one side and a TV on the other side.
+
+The current state of development can be found at [TV/README](TV/README.md).
 
 ## Support
 
