@@ -18,20 +18,24 @@ PREPROC_PATH=cpp
 # End of configuration area
 
 # Version being compiled (LSL string)
-VERSION="2.0.0"
+VERSION="0.5.1"
 
 
 # Note some of these scripts don't strictly need to be optimized for memory.
 
-OPTIMIZED=Shield.lslo
+OPTIMIZED=Red_Tea.lslo\
+ Region_Stats.lslo\
+ Saucer.lslo\
+ Teacup.lslo\
+ Tea_Strainer.lslo
 
 UNOPTIMIZED=
 
 all: $(OPTIMIZED)
-	$(PYTHON) build-aux.py rm $@
+	$(PYTHON) ../build-aux.py rm $@
 
 clean:
-	$(PYTHON) build-aux.py rm $(OPTIMIZED)
+	$(PYTHON) ../build-aux.py rm $(OPTIMIZED)
 
 optimized: $(OPTIMIZED)
 
@@ -40,7 +44,7 @@ optimized: $(OPTIMIZED)
 
 # Bash only, probably GNU make only
 setvars:
-	for name in $(addprefix ',$(addsuffix ',$(OPTIMIZED:.lslo=.lsl))) $(addprefix ',$(addsuffix ',$(UNOPTIMIZED))); do $(PYTHON) build-aux.py setvars "$$name" version='$(VERSION)' ; done
+	for name in $(addprefix ',$(addsuffix ',$(OPTIMIZED:.lslo=.lsl))) $(addprefix ',$(addsuffix ',$(UNOPTIMIZED))); do $(PYTHON) ../build-aux.py setvars "$$name" version='$(VERSION)' ; done
 
 release: setvars all
 

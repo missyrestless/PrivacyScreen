@@ -29,7 +29,7 @@
 //                                                //
 ////////////////////////////////////////////////////
 
-string  VERSION = "1.1.3";
+string  VERSION = "2.0.0";
 
 integer ALL     = TRUE;      // Set to TRUE to effect all shields, FALSE for single shield
 integer DOUBLE  = FALSE;     // Set to TRUE for double sided shield, FALSE for single sided
@@ -67,11 +67,13 @@ float   def_size_x = -1.0;
 float   def_size_y = -1.0;
 vector  orig_size  = ZERO_VECTOR;
 vector  prim_size  = ZERO_VECTOR;
-vector  position;
+vector  curr_position;
 string  BLANK      = "5b53359e-59dd-d8a2-04c3-9e65134da47a";
+string  HomePage   = "https://www.youtube.com/@missyrestless/playlists";
 string  front_texture;
 string  back_texture;
 string  linksetValue;
+string  menuMessage;
 string  shape = "Box";
 
 // Linkset Data Keys
@@ -302,7 +304,6 @@ displayConfMenu() {
     llListenRemove(dialogHandle);
     dialogHandle = llListen(dialogChannel, "", tcher, "");
     list conf_menu = [];
-    string menuMessage;
 
     menuMessage = "\nTruth & Beauty Privacy Shield " + VERSION + "\n";
     if (GROUP) {
@@ -354,7 +355,6 @@ displayMainMenu() {
     llListenRemove(dialogHandle);
     dialogHandle = llListen(dialogChannel, "", tcher, "");
     list main_menu = [];
-    string menuMessage;
 
     menuMessage = "\nTruth & Beauty Privacy Shield " + VERSION;
     if (ALL) {
@@ -384,16 +384,61 @@ displayMainMenu() {
     } else {
         main_menu += ["TWO SIDES"];
     }
-    main_menu += ["SETTINGS", "SIZE", "TEXTURE"];
+    main_menu += ["POSITiON", "ROTATION", "SETTINGS", "SIZE", "TEXTURE", "TV"];
     main_menu += ["EXIT"];
     ShowMenu(menuMessage, main_menu);
+}
+
+displayPosMenu() {
+    llListenRemove(dialogHandle);
+    dialogHandle = llListen(dialogChannel, "", tcher, "");
+    list pos_menu = [];
+
+    curr_position = llGetPos();
+    menuMessage = "\nTruth & Beauty Privacy Shield Position Menu";
+    menuMessage = "\nPosition this shield only\n";
+    menuMessage += "\nCurrent shield position:";
+    menuMessage += "\n\tX: " + (string) ( curr_position.x );
+    menuMessage += "\n\tY: " + (string) ( curr_position.y );
+    menuMessage += "\n\tZ: " + (string) ( curr_position.z );
+    pos_menu = ["X", "Y", "Z", "+0.1m", "-0.1m", "+1m", "-1m", "+5m", "-5m"];
+    pos_menu += ["BACK", "RESTORE", "EXIT"];
+    ShowMenu(menuMessage, pos_menu);
+}
+
+displayRotMenu() {
+    llListenRemove(dialogHandle);
+    dialogHandle = llListen(dialogChannel, "", tcher, "");
+    list rot_menu = [];
+
+    rotation rot = llGetRot();
+    menuMessage = "\nTruth & Beauty Privacy Shield Rotation Menu";
+    menuMessage = "\nRotate this shield only\n";
+    menuMessage += "\nCurrent shield rotation:";
+    menuMessage += "\n\tX: " + (string) ( rot.x );
+    menuMessage += "\n\tY: " + (string) ( rot.y );
+    menuMessage += "\n\tZ: " + (string) ( rot.z );
+    rot_menu = ["X", "Y", "Z", "ALIGN", "+45", "+90", "+180", "+270", "ZERO"];
+    rot_menu += ["BACK", "RESTORE", "EXIT"];
+    ShowMenu(menuMessage, rot_menu);
+}
+
+displayTvMenu() {
+    llListenRemove(dialogHandle);
+    dialogHandle = llListen(dialogChannel, "", tcher, "");
+    list tv_menu = [];
+
+    menuMessage = "\nTruth & Beauty Privacy Shield TV Menu\n";
+    menuMessage += "\nCurrent TV Home: " + HomePage;
+    tv_menu = ["TV ON", "TV OFF", "INPUT URL"];
+    tv_menu += ["SET HOME", "BACK", "EXIT"];
+    ShowMenu(menuMessage, tv_menu);
 }
 
 displaySizeMenu() {
     llListenRemove(dialogHandle);
     dialogHandle = llListen(dialogChannel, "", tcher, "");
     list size_menu = [];
-    string menuMessage;
 
     menuMessage = "\nTruth & Beauty Privacy Shield Resize Menu";
     menuMessage = "\nResize this shield only\n";
@@ -410,7 +455,6 @@ displayTextMenu() {
     integer total = llGetListLength(faces);
     list face_menu = [];
     list text_menu = [];
-    string menuMessage;
 
     llListenRemove(dialogHandle);
     dialogHandle = llListen(dialogChannel, "", tcher, "");
@@ -513,7 +557,7 @@ GetDatastoreValues() {
     //  Prim Position linkset data key
     linksetValue = llLinksetDataRead(POSITION_LSD_KEY);
     if (linksetValue != "") {
-        position = (vector)linksetValue;
+        curr_position = (vector)linksetValue;
     }
     // Original Prim Textures linkset data key
     linksetValue = llLinksetDataRead(ORIGTEXT_LSD_KEY);
@@ -562,7 +606,7 @@ SetDatastoreValues(key id) {
     // Prim Size linkset data key
     linksetDataWrite(id, SIZE_LSD_KEY, (string)prim_size, "Shield Size");
     //  Prim Position linkset data key
-    linksetDataWrite(id, POSITION_LSD_KEY, (string)position, "Shield Position");
+    linksetDataWrite(id, POSITION_LSD_KEY, (string)curr_position, "Shield Position");
     // Prim Textures linkset data key
     linksetDataWrite(id, TEXTURES_LSD_KEY, llList2CSV(texts), "Shield Textures");
     // Group access linkset data key
@@ -722,8 +766,8 @@ default {
     }
 
     moving_end() {
-        position = llGetPos();
-        linksetDataWrite(owner, POSITION_LSD_KEY, (string)position, "Shield Position");
+        curr_position = llGetPos();
+        linksetDataWrite(owner, POSITION_LSD_KEY, (string)curr_position, "Shield Position");
     }
 
     timer() {
@@ -832,10 +876,10 @@ default {
 
         linksetValue = llLinksetDataRead(POSITION_LSD_KEY);
         if (linksetValue != "") {
-            position = (vector)linksetValue;
-            llSetRegionPos(position);
+            curr_position = (vector)linksetValue;
+            llSetRegionPos(curr_position);
         } else {
-            position = llGetPos();
+            curr_position = llGetPos();
         }
         set_faces();
         origt = texts;
@@ -1106,7 +1150,13 @@ state menu
             } else {
                 if (id) llRegionSayTo(id, 0, "Only the owner can set the shields to owner only");
             }
+        } else if (message == "POSITION") {
+            state pos;
+        } else if (message == "ROTATION") {
+            state rot;
         } else if (message == "SETTINGS") {
+            state tv;
+        } else if (message == "TV") {
             state settings;
         } else if (message == "EXIT") {
             // Return to the previous state
@@ -1118,6 +1168,150 @@ state menu
         }
         // Re-send the dialog to keep the menu open
         displayMainMenu();
+    }
+
+    timer() {
+        // Return to the previous state
+        if (defaultState) {
+            state default;
+        } else {
+            state cloaked;
+        }
+    }
+
+    state_exit() {
+        SetDatastoreValues(tcher);
+        llSetTimerEvent(0);
+    }
+}
+
+state pos
+{
+    state_entry() {
+        displayPosMenu();
+    }
+
+    listen(integer channel, string name, key id, string message) {
+        if (message == "24x12") {
+        } else if (message == "32x16") {
+        } else if (message == "RESTORE") {
+            linksetValue = llLinksetDataRead(ORIGSIZE_LSD_KEY);
+            if (linksetValue != "") {
+            } else {
+                linksetDataWrite(owner, ORIGSIZE_LSD_KEY, (string)prim_size, "Original Shield Size");
+            }
+        } else if (message == "BACK") {
+            state menu;
+        } else if (message == "EXIT") {
+            // Return to the previous state
+            if (defaultState) {
+                state default;
+            } else {
+                state cloaked;
+            }
+        }
+        if (shape == "Tube") {
+            // Tube size reverses X & Y, Z is same as Y
+            prim_size.y = prim_size.x;
+        }
+        // Re-send the dialog to keep the menu open
+        displayPosMenu();
+    }
+
+    timer() {
+        // Return to the previous state
+        if (defaultState) {
+            state default;
+        } else {
+            state cloaked;
+        }
+    }
+
+    state_exit() {
+        SetDatastoreValues(tcher);
+        llSetTimerEvent(0);
+    }
+}
+
+state rot
+{
+    state_entry() {
+        displayRotMenu();
+    }
+
+    listen(integer channel, string name, key id, string message) {
+        if (message == "24x12") {
+        } else if (message == "32x16") {
+        } else if (message == "RESTORE") {
+            linksetValue = llLinksetDataRead(ORIGSIZE_LSD_KEY);
+            if (linksetValue != "") {
+            } else {
+                linksetDataWrite(owner, ORIGSIZE_LSD_KEY, (string)prim_size, "Original Shield Size");
+            }
+        } else if (message == "BACK") {
+            state menu;
+        } else if (message == "EXIT") {
+            // Return to the previous state
+            if (defaultState) {
+                state default;
+            } else {
+                state cloaked;
+            }
+        }
+        if (shape == "Tube") {
+            // Tube size reverses X & Y, Z is same as Y
+            prim_size.y = prim_size.x;
+        }
+        // Re-send the dialog to keep the menu open
+        displayRotMenu();
+    }
+
+    timer() {
+        // Return to the previous state
+        if (defaultState) {
+            state default;
+        } else {
+            state cloaked;
+        }
+    }
+
+    state_exit() {
+        SetDatastoreValues(tcher);
+        llSetTimerEvent(0);
+    }
+}
+
+state tv
+{
+    state_entry() {
+        displayTvMenu();
+    }
+
+    listen(integer channel, string name, key id, string message) {
+        if (message == "24x12") {
+        } else if (message == "32x16") {
+        } else if (message == "RESTORE") {
+            linksetValue = llLinksetDataRead(ORIGSIZE_LSD_KEY);
+            if (linksetValue != "") {
+            } else {
+                linksetDataWrite(owner, ORIGSIZE_LSD_KEY, (string)prim_size, "Original Shield Size");
+            }
+        } else if (message == "BACK") {
+            state menu;
+        } else if (message == "EXIT") {
+            // Return to the previous state
+            if (defaultState) {
+                state default;
+            } else {
+                state cloaked;
+            }
+        }
+        if (shape == "Tube") {
+            // Tube size reverses X & Y, Z is same as Y
+            prim_size.y = prim_size.x;
+        }
+        // Re-send the dialog to keep the menu open
+        displayTvMenu();
     }
 
     timer() {

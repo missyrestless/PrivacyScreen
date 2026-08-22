@@ -42,9 +42,16 @@ fi
 make clean
 make
 [ -x trim_lslo ] && ./trim_lslo
+[ -d TV ] && {
+  cd TV
+  make clean
+  make
+  [ -x ../trim_lslo ] && ../trim_lslo
+  cd ..
+}
 
 PRODUCT="Privacy_Shield"
-tar cf - *.lslo *.lsl \
+tar cf - *.lslo *.lsl TV/*.lslo TV/*.lsl \
          LICENSE \
          COPYRIGHT \
          VERSION | gzip -9 > ${PRODUCT}-${VERSION}.tar.gz
