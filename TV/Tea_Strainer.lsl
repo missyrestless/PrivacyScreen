@@ -5,53 +5,53 @@ integer gIntCnt; //-- Allow visual tracking since last reset
 
 //-- optimized for speed, NOT size
 
-default{
-	link_message( integer vIntSrc, integer vIntDta, string vStrDta, key vKeyDta ){
-		if (vKeyDta){
-			if (~gIntAct = llListFindList( [204, 202, 201, 200, 100, 403, 404, 418], [vIntDta] )){
-				if (4 & gIntAct){ if (2 & gIntAct){ if (1 & gIntAct){
+default {
+	link_message( integer vIntSrc, integer vIntDta, string vStrDta, key vKeyDta ) {
+		if (vKeyDta) {
+			if (~gIntAct = llListFindList( [204, 202, 201, 200, 100, 403, 404, 418], [vIntDta] )) {
+				if (4 & gIntAct) { if (2 & gIntAct) { if (1 & gIntAct) {
 					llOwnerSay( (string)(++gIntCnt) + ": ‘" + (string)vKeyDta + "’ Server Query: 418 “" + llGetSubString( vStrDta, 0, 35 ) + llList2String( ["”…", "”"], llStringLength( vStrDta ) < 37 ) );
-				}else{
+				}else {
 					llOwnerSay( (string)(++gIntCnt) + ": ‘" + (string)vKeyDta + "’ Service Reply: 404 'Not Found'" );
-				}}else if (1 & gIntAct){
+				}}else if (1 & gIntAct) {
 					llOwnerSay( (string)(++gIntCnt) + ": ‘" + (string)vKeyDta + "’ Service Reply: 403 'Forbidden'" );
-				}else{
+				}else {
 					llOwnerSay( (string)(++gIntCnt) + ": ‘" + (string)vKeyDta + "’ Service Reply: 100 'Continue'" );
-				}}else if (2 & gIntAct){ if (1 & gIntAct){
+				}}else if (2 & gIntAct) { if (1 & gIntAct) {
 					llOwnerSay( (string)(++gIntCnt) + ": ‘" + (string)vKeyDta + "’ Service Reply: 200 'Success'" );
-				}else{
+				}else {
 					llOwnerSay( (string)(++gIntCnt) + ": ‘" + (string)vKeyDta + "’ Service Reply: 201 'Created'" );
-				}}else if (1 & gIntAct){
+				}}else if (1 & gIntAct) {
 					llOwnerSay( (string)(++gIntCnt) + ": ‘" + (string)vKeyDta + "’ Service Reply: 202 'Accepted'" );
-				}else{
+				}else {
 					llOwnerSay( (string)(++gIntCnt) + ": ‘" + (string)vKeyDta + "’ Service Reply: 204 'No Content'" );
 				}
-			}else{
+			}else {
 				llOwnerSay( "Received unknown message from link (" + (string)vIntSrc + ")“" +
-				  llGetLinkName( vIntSrc ) +"”\n{(" + (string)vIntDta + "), “" + llGetSubString( vStrDta, 0, 35 ) +
+				  llGetLinkName( vIntSrc ) +"”\n {(" + (string)vIntDta + "), “" + llGetSubString( vStrDta, 0, 35 ) +
 				  llList2String( ["”…, ‘", "”, ‘"], llStringLength( vStrDta ) < 37 ) + (string)vKeyDta + "’}" );
 			}
-		}else if (NULL_KEY == (string)vKeyDta){
-			if (~gIntAct = llListFindList( [418, 600, 601], [vIntDta] )){
-				if (2 & gIntAct){ /*if (1 & gIntAct){
+		}else if (NULL_KEY == (string)vKeyDta) {
+			if (~gIntAct = llListFindList( [418, 600, 601], [vIntDta] )) {
+				if (2 & gIntAct) { /*if (1 & gIntAct) {
 					//-- unused
-				}else*/{
+				}else*/ {
 					llOwnerSay( (string)(++gIntCnt) + ": " + "File Service: 601 'File Added' “" + vStrDta + "”" );
-				}}else if (1 & gIntAct){
+				}}else if (1 & gIntAct) {
 					llOwnerSay( (string)(++gIntCnt) + ": " + "File Service: 600 'File Removed' “" + vStrDta + "”" );
-				}else{
-					if ("Teacup URL changed" == vStrDta){
+				}else {
+					if ("Teacup URL changed" == vStrDta) {
 						vStrDta += "”\n“ " + llList2String( llGetPrimitiveParams( [PRIM_TEXT] ), 0 ) + " ";
 						gIntCnt = 0;
 					}
 					llOwnerSay( (string)(++gIntCnt) + ": " + "General Advertisement: “" + vStrDta + "”" );
 				}
-			}else{
+			}else {
 				llOwnerSay( "Received unknown message from link (" + (string)vIntSrc + ")“" +
 				  llGetLinkName( vIntSrc ) +"”\n{(" + (string)vIntDta + "), “" + llGetSubString( vStrDta, 0, 35 ) +
 				  llList2String( ["”…, ‘", "”, ‘"], llStringLength( vStrDta ) < 37 ) + (string)vKeyDta + "’}" );
 			}
-		}else{
+		}else {
 			llOwnerSay( "Received unknown message from link (" +
 			  (string)vIntSrc + ")“" + llGetLinkName( vIntSrc ) +"”\n{(" + (string)vIntDta + "), “" +
 			  llGetSubString( vStrDta, 0, 35 ) + llList2String( ["”…, ‘", "”, ‘"], llStringLength( vStrDta ) < 37 ) +

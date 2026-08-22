@@ -14,15 +14,15 @@ string  gStrTod; //-- Stores Region Time of Day (updates live if Fixed Sun == fa
 key     gKeyQry; //-- Dataserver Query key
 integer gBooRdy; //-- Controls availability advertisement
 
-uGetTod( vector vPosSun ){ //-- grabs Region apparent Time of Day (slightly inaccurate)
+uGetTod( vector vPosSun ) { //-- grabs Region apparent Time of Day (slightly inaccurate)
 	vPosSun = llVecNorm( <vPosSun.x, 0.0, vPosSun.z> );
 	integer vIntTod = (integer)(86400.0 - (llAtan2( vPosSun.x, vPosSun.z ) * RAD_TO_DEG + 180) * 240.0);
 	gStrTod = (string)(vIntTod / 3600) + ":" + llGetSubString( "0" + (string)(vIntTod % 3600 / 60), -2, -1 ) +
 		":" + llGetSubString( "0" + (string)(vIntTod % 60), -2, -1 ) + "";
 }
 
-default{
-	state_entry(){ //-- make the page seem unavailable while we refresh our static data
+default {
+	state_entry() { //-- make the page seem unavailable while we refresh our static data
 		llMessageLinked( LINK_SET, 600, gStrNom, NULL_KEY );
 		gStrNfo = //-- Start building static info
 		  "<tr><td><span style=\"font-weight: bold;\">Pre-calculated Data</span></td></tr>\\n<tr><td>Region Name:</td><td>" +
@@ -31,8 +31,8 @@ default{
 		gKeyQry = llRequestSimulatorData( llGetRegionName(), DATA_SIM_RATING );
 	}
 	
-	dataserver( key vKeyQID, string vStrDta ){
-		if (gKeyQry == vKeyQID){ //-- continue building static info
+	dataserver( key vKeyQID, string vStrDta ) {
+		if (gKeyQry == vKeyQID) { //-- continue building static info
 			gStrNfo += "<tr><td>Region Rating:</td><td>" + //-- this is one way to get unknown ratings noticed =X
 			  llList2String( ["General", "Moderate", "Adult", "XXX Pr0nland"],
 			                 llListFindList( ["PG", "MATURE", "ADULT", "UNKNOWN"], [vStrDta] ) ) +
@@ -53,11 +53,11 @@ default{
 		}
 	}
 	
-	link_message( integer vIntSrc, integer vIntDta, string vStrDta, key vKeyDta ){
-		if (418 == vIntDta){
-			if (vKeyDta){
-				if (gStrNom == llList2String( llParseStringKeepNulls( vStrDta, ["?"], [] ), 0 )){
-					if (gIntFlg != vIntDta = llGetRegionFlags()){
+	link_message( integer vIntSrc, integer vIntDta, string vStrDta, key vKeyDta ) {
+		if (418 == vIntDta) {
+			if (vKeyDta) {
+				if (gStrNom == llList2String( llParseStringKeepNulls( vStrDta, ["?"], [] ), 0 )) {
+					if (gIntFlg != vIntDta = llGetRegionFlags()) {
 						gIntFlg = vIntDta; //-- only (re)built if flags change or at first request
 						list vLstFlg = ["Y", "N"]; //-- need to check this is better for mono lists than inline
 						gStrFlg = "<tr><td><span style=\"font-weight:bold;\">Region Flags</span></td></tr>\\n<tr><td>Damage Enabled?</td><td>" +
@@ -140,7 +140,7 @@ default{
 						*/
 						"</td></tr>\\n<tr><td><br>†=Does not have an LSL constant<br>‡=No longer exists in source code</td></tr>\\n";
 					}
-					if (~gIntFlg & 0x00000010){ //-- don't update for fixed sun
+					if (~gIntFlg & 0x00000010) { //-- don't update for fixed sun
 						uGetTod( llGetSunDirection() );
 					}
 					llMessageLinked( vIntSrc,
@@ -158,20 +158,20 @@ default{
 					                 "</td></tr>\\n" + gStrFlg + gStrPg2,
 					                 vKeyDta );
 				}
-			}else if (NULL_KEY == vKeyDta && "" == vStrDta && gBooRdy){
+			} else if (NULL_KEY == vKeyDta && "" == vStrDta && gBooRdy) {
 				//-- Saucer stared, let tell it we have a page. Realistically unneccessary
 				llMessageLinked( vIntSrc, 601, gStrNom, NULL_KEY );
-			}//-- out page actualy serves in under a sec even on first request, but I wanted to demo the logic
+			} //-- out page actualy serves in under a sec even on first request, but I wanted to demo the logic
 		}
 	}
 	
-	changed( integer vBitChg ){
-		if ((CHANGED_REGION | CHANGED_REGION_START) & vBitChg){
+	changed( integer vBitChg ) {
+		if ((CHANGED_REGION | CHANGED_REGION_START) & vBitChg) {
 			llResetScript(); //-- Regions changes or Restarts may have new static info
 		}
 	}
 	
-	on_rez( integer vIntBgn ){
+	on_rez( integer vIntBgn ) {
 		llResetScript(); //-- Make sure static info is releveant to current region
 	}
 }

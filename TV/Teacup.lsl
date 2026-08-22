@@ -25,41 +25,41 @@ list    gLstPndTim; //-- Timeout Value queue (Request Timeout)
 //-- These (hopefully) prevent multiple responses if SL sends a timeout.
 
 
-default{
-	state_entry(){ //-- Request URL on start up
+default {
+	state_entry() { //-- Request URL on start up
 		llRequestURL();
 	}
 	
-	on_rez( integer vIntBgn ){ //-- Clear pending and request new URL on rez
+	on_rez( integer vIntBgn ) { //-- Clear pending and request new URL on rez
 		gLstPndKey = gLstPndTim = [];
 		llRequestURL();
 	}
 	
-	changed( integer vBitChg ){ //-- Clear pending and re-request URL on region change/restart
-		if ((CHANGED_REGION_START | CHANGED_REGION) & vBitChg){
+	changed( integer vBitChg ) { //-- Clear pending and re-request URL on region change/restart
+		if ((CHANGED_REGION_START | CHANGED_REGION) & vBitChg) {
 			gLstPndKey = gLstPndTim = []; //-- Consider sending custom 404's or 205's here instead
 			llRequestURL();
 		}
 	}
 	
-	http_request( key vKeySrc, string vStrMth, string vStrBdy ){
+	http_request( key vKeySrc, string vStrMth, string vStrBdy ) {
 		integer vIntMth = llListFindList( [URL_REQUEST_DENIED, URL_REQUEST_GRANTED, "POST", "GET"], [vStrMth] );
-		if (4 & vIntMth){
+		if (4 & vIntMth) {
 			//-- trap unused here, check we hasve a valid non root file name on the next line
-		}else if (2 & vIntMth){ if (vStrMth = llUnescapeURL( llDeleteSubString( llGetHTTPHeader( vKeySrc, "x-path-info" ), 0, 0 ) )){
+		} else if (2 & vIntMth) { if (vStrMth = llUnescapeURL( llDeleteSubString( llGetHTTPHeader( vKeySrc, "x-path-info" ), 0, 0 ) )) {
 			llMessageLinked( LINK_SET,
 			                 418,
 			                 vStrMth + "?" + llGetHTTPHeader( vKeySrc, "x-query-string" ) +
 			                 "#ip=" + llGetHTTPHeader( vKeySrc, "x-remote-ip" ) + "&" + vStrBdy,
 			                 vKeySrc );
-			if (gLstPndTim == []){
+			if (gLstPndTim == []) {
 				llSetTimerEvent( 3.0 );
 			}
 			gLstPndKey += [vKeySrc];
 			gLstPndTim += [llGetUnixTime() + 20];
-		}//-- can handle root requests here later if we want
-		}else{ //-- URL request response: set hover text, push proper page format to prim face
-			if (vIntMth || llList2String( llGetPrimitiveParams( [PRIM_TEXT] ), 0 ) != "No URL"){
+		} //-- can handle root requests here later if we want
+		} else { //-- URL request response: set hover text, push proper page format to prim face
+			if (vIntMth || llList2String( llGetPrimitiveParams( [PRIM_TEXT] ), 0 ) != "No URL") {
 				llSetPrimitiveParams( [PRIM_TEXT, llList2String( ["No URL", (vStrBdy += "/")], vIntMth ), <(float)(!vIntMth), 0.5, 0.5>, 0.0] );
 				vStrBdy = gStrTBS1xx + llList2String( ["", gStrTBS1a1 + vStrBdy + gStrTBS1a2], vIntMth ) + gStrTBS2xx +
 				  llList2String( [gStrTBS2a1, gStrTBS2a1], vIntMth ) + gStrTBS3xx + (string)llGetOwner() + gStrTBS4xx;
@@ -70,9 +70,9 @@ default{
 		}
 	}
 	
-	link_message( integer vIntSrc, integer vIntDta, string vStrDta, key vKeyDta ){
-		if (~vIntSrc = llListFindList( [200, 201, 202, 204, 403, 404], [vIntDta] )){ //-- valid return code?
-			if (~vIntSrc = llListFindList( gLstPndKey, [vKeyDta] )){ //-- request still pending?
+	link_message( integer vIntSrc, integer vIntDta, string vStrDta, key vKeyDta ) {
+		if (~vIntSrc = llListFindList( [200, 201, 202, 204, 403, 404], [vIntDta] )) { //-- valid return code?
+			if (~vIntSrc = llListFindList( gLstPndKey, [vKeyDta] )) { //-- request still pending?
 				llHTTPResponse( vKeyDta, vIntDta, vStrDta ); //-- Serve request & remove from pending queue
 				gLstPndKey = llDeleteSubList( gLstPndKey, vIntSrc, vIntSrc );
 				gLstPndTim = llDeleteSubList( gLstPndTim, vIntSrc, vIntSrc );
@@ -80,26 +80,26 @@ default{
 		}
 	}
 	
-	timer(){ //-- Optimally, runs once on an empty list for 3sec worth requests
-		if (gLstPndTim != []){ //-- Pending requests?
-			while (llList2Integer( gLstPndTim, 0 ) < llGetUnixTime()){ //-- are any expired?
+	timer() { //-- Optimally, runs once on an empty list for 3sec worth requests
+		if (gLstPndTim != []) { //-- Pending requests?
+			while (llList2Integer( gLstPndTim, 0 ) < llGetUnixTime()) { //-- are any expired?
 				gLstPndTim = llDeleteSubList( gLstPndTim, 0, 0 ); //-- remove expired
 				gLstPndKey = llDeleteSubList( gLstPndKey, 0, 0 );
-				if (gLstPndTim == []){ //-- Pending Queue empty?
+				if (gLstPndTim == []) { //-- Pending Queue empty?
 					llSetTimerEvent( 0.0 ); //-- Stop timer, and exit
 					return;
 				}
 			}
-		}else{ //-- No pending requests, turn off the timer
+		} else { //-- No pending requests, turn off the timer
 			llSetTimerEvent( 0.0 );
 		}
 	}
 	
-	sensor( integer vIntNul ){
+	sensor( integer vIntNul ) {
 		//-- Dummy Sensor event required by SCR-53
 	}
 	
-	no_sensor(){ //-- URL re-request 5 mins after failure
+	no_sensor() { //-- URL re-request 5 mins after failure
 		llSensorRemove();
 		llRequestURL();
 	}
