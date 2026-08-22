@@ -29,9 +29,11 @@ UNOPTIMIZED=
 
 all: $(OPTIMIZED)
 	$(PYTHON) build-aux.py rm $@
+	$(MAKE) -C TV
 
 clean:
 	$(PYTHON) build-aux.py rm $(OPTIMIZED)
+	$(MAKE) -C TV clean
 
 optimized: $(OPTIMIZED)
 
