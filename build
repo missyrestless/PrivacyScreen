@@ -5,11 +5,12 @@ DEST="${HOME}/transfers/priv"
 
 make clean
 make
-[ $? -eq 0 ] && {
-  [ -x trim_lslo ] && {
-    echo "Trimming comments from optimized LSL script"
-    ./trim_lslo
-  }
+[ -x trim_lslo ] && {
+  echo "Trimming comments from optimized LSL script"
+  ./trim_lslo
+  cd TV
+  ../trim_lslo
+  cd ..
 }
 
 [ "$1" == "-c" ] && {
@@ -18,4 +19,9 @@ make
 
   cp Shield.lslo ${DEST}/Shield
   cp COPYRIGHT LICENSE README.txt VERSION ${DEST}
+  cp TV/Red_Tea.lslo ${DEST}/Red_Tea
+  cp TV/Region_Stats.lslo ${DEST}/Region_Stats
+  cp TV/Saucer.lslo ${DEST}/Saucer
+  cp TV/Teacup.lslo ${DEST}/Teacup
+  cp TV/Tea_Strainer.lslo ${DEST}/Tea_Strainer
 }

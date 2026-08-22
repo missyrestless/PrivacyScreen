@@ -44,8 +44,6 @@ make
 [ -x trim_lslo ] && ./trim_lslo
 [ -d TV ] && {
   cd TV
-  make clean
-  make
   [ -x ../trim_lslo ] && ../trim_lslo
   cd ..
 }
